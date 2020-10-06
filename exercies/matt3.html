@@ -1,0 +1,767 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://d3js.org/d3.v6.js"></script>
+    <style>
+        ul {
+            list-style-type: none;
+            margin: -8px;
+            padding: 0;
+            overflow: hidden;
+            background-color: #333;
+            height:39px;
+        }
+
+        li {
+            float: left;
+        }
+
+        li a {
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+
+        li a:hover {
+            background-color: #111;
+        }
+        body {
+            margin-top:0;
+        }
+    </style>
+</head>
+<body style="overflow: hidden;">
+<ul>
+    <li><a href="index.html">Visualization</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="documentation.html">Documenation</a></li>
+    <li><a href="video.html">Video</a></li>
+</ul>
+
+<div style="margin-left: 10px;">
+    <svg id="pump-legend" style="margin-left: 25px; margin-top:15px; width: 350px; height: 110px; display:inline-block"></svg>
+    <div style="display:inline-block; transform: translateY(-30%); margin-left: 20px;">
+        <div>
+            <label for="deathByAge">Filter by Age</label>
+            <select name="deathByAge" id="deathByAge" onchange="filterPumps()" style="margin-left: 21px; width: 72px;">>
+                <option value="-1">All</option>
+                <option value="0">0-10</option>
+                <option value="1">11-20</option>
+                <option value="2">21-40</option>
+                <option value="3">41-60</option>
+                <option value="4">61-80</option>
+                <option value="5">> 80</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="deathByGender">Filter by Gender</label>
+            <select name="deathByGender" id="deathByGender" onchange="filterPumps()" >
+                <option value="-1">All</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+            </select>
+        </div>
+        <div>
+            <p style="margin:0;">Hover over <strong>Deaths Per Day</strong> to filter by day</p>
+        </div>
+        <div>
+            <p style="margin:0;">Scroll or click/drag to move around the map</p>
+        </div>
+    </div>
+
+    <br>
+    <div style="border: solid lightgrey;width: 400px; height: 375px; overflow: hidden; display:inline-block">
+        <svg id="pump_map" style="background-color:seashell; transform: scale(1, -1);" viewBox="0 0 525 550"></svg>
+    </div>
+
+    <!--</div>-->
+    <svg id="timeline" style="width: 800px; height: 375px;"></svg>
+    <br>
+    <svg id="gender-bar-chart" style="margin-right: 100px; width: 400px; height: 255px;"></svg>
+    <svg id="age-bar-chart" style="width: 600px; height: 255px;"></svg>
+</div>
+<script>
+    files = []
+    files.push(d3.json("./streets.json"));
+    files.push(d3.csv('pumps.csv'));
+    files.push(d3.csv('deathdays.csv'));
+    files.push(d3.csv('deaths_age_sex.csv'));
+    // const AGE = 'age';
+    const MALE_COLOR = '#2d53b5';
+    const FEMALE_COLOR = '#e069ac';
+    const PUMP_COLOR = '#727575'
+    // const GENDER = 'gender';
+    const ALL = '-1';
+    const SCALE = 30;
+    const Y_OFFSET = 25
+    const X_OFFSET = 95
+    const pumpSvg = d3.select('#pump_map').append('g');
+    const timelineSvg = d3.select('#timeline').append('g')
+    const pumpLegendSvg = d3.select('#pump-legend').append('g')
+    let xAgeScale;
+    let yAgeScale;
+    let xGenderScale;
+    let yGenderScale;
+    let genderMax;
+    let maxAgeHeight;
+    let barHeight;
+    let ageGroups;
+
+    const makeAllVisibleByAge = () => {
+        d3.selectAll(`#pump_map .death.age-0, .death.age-1, .death.age-2, .death.age-3, `
+            + `circle.death.age-4, .death.age-5`)
+            .style("visibility", "visible")
+            .classed("visible", true);
+    }
+
+    const makeAllVisibleByGender = () => {
+        d3.selectAll(`#pump_map .death.male, .death.female`)
+            .style("visibility", "visible")
+            .classed("visible", true);
+    }
+
+    const filterGender = () => {
+        d3.selectAll("#gender-bar-chart rect").nodes().forEach(n => {
+            n = d3.select(n);
+            if (n.attr('class').includes('.death-bar-female')) {
+                let barSize = yGenderScale(genderMax - d3.selectAll(`#pump_map .death.female.visible`).size())
+                n.attr('height', `${barSize}`)
+                    .attr("transform", `translate(${xGenderScale('female') - 150}, ${barHeight - barSize})`)
+            }
+            if (n.attr('class').includes('.death-bar-male')) {
+                let barSize = yGenderScale(genderMax - d3.selectAll(`#pump_map .death.male.visible`).size())
+                n.attr('height', `${barSize}`)
+                    .attr("transform", `translate(${xGenderScale('male') - 25}, ${barHeight - barSize})`)
+            }
+
+        })
+    }
+
+    const filterAge = () => {
+        ageGroups.forEach(ag => {
+            d3.selectAll("#age-bar-chart rect").nodes().forEach(n => {
+                n = d3.select(n);
+
+                if (n.attr('class').includes(`.death-bar-age-${ag[0]}`)) {
+                    let barSize = yAgeScale(maxAgeHeight - d3.selectAll(`#pump_map .death.age-${ag[0]}.visible`).size())
+                    console.log(`.death-bar-age-${ag[0]}`, barSize)
+                    n.attr('height', `${barSize}`)
+                    .attr("transform", `translate(${xAgeScale(ag[1]) - (20 + (78 * ag[0]))}, ${barHeight - barSize})`)
+                }
+            });
+        });
+    }
+
+    const filterPumps = (dateCssSelector=null) => {
+        const genderVal = document.getElementById('deathByGender').value;
+        const ageVal = document.getElementById('deathByAge').value;
+
+        if (genderVal === ALL) {
+            makeAllVisibleByGender();
+            if(ageVal !== ALL) {
+                d3.selectAll(`#pump_map .death:not(.age-${ageVal})`)
+                    .style("visibility", "hidden")
+                    .classed("visible", true);
+                d3.selectAll(`#pump_map .death:not(.age-${ageVal})`)
+                    .style("visibility", "hidden")
+                    .classed("visible", false);
+            }
+        }
+        if (ageVal === ALL) {
+            makeAllVisibleByAge()
+            if (genderVal !== ALL) {
+                d3.selectAll(`#pump_map .death.${genderVal}`)
+                    .style("visibility", "visible")
+                    .classed("visible", true);
+                d3.selectAll(`#pump_map .death:not(.${genderVal})`)
+                    .style("visibility", "hidden")
+                    .classed("visible", false);
+            }
+        }
+
+        if (genderVal !== ALL && ageVal !== ALL) {
+            d3.selectAll(`#pump_map .death.age-${ageVal},.death.${genderVal}`)
+                .style("visibility", "visible")
+                .classed("visible", true);
+            d3.selectAll(`#pump_map .death:not(.age-${ageVal}),.death:not(.${genderVal})`)
+                .style("visibility", "hidden")
+                .classed("visible", false);
+        }
+
+        if (dateCssSelector) {
+            // Filter the pump map
+            d3.selectAll(`#pump_map .visible.death${dateCssSelector}`)
+                .style("visibility", "visible")
+                .classed("visible", true);
+            d3.selectAll(`#pump_map .death:not(${dateCssSelector})`)
+                .style("visibility", "hidden")
+                .classed("visible", false);
+        }
+
+        filterGender();
+        filterAge();
+    }
+
+    const createMap = (streets) => {
+        let pumpWidth = 400;
+        let pumpHeight = 400;
+        pumpSvg.attr('width', `${pumpWidth}px`).attr('height', `${pumpHeight}px`)
+
+        function handleZoom(event) {
+
+            if (pumpSvg) {
+                d3.select('#pump_map g').attr("transform", `${event.transform}`);
+            }
+        }
+
+        let zoom = d3.zoom()
+            .scaleExtent([1, 4])
+            .on("zoom", handleZoom)
+
+        d3.select('#pump_map').call(zoom, d3.zoomIdentity.scale(1,-1))
+
+        streets.forEach((seg) => {
+            lines = pumpSvg.append('path')
+                .attr("stroke", "black")
+                .attr("stroke-width", 1)
+                .attr("fill", "none")
+                .datum(seg)
+                .attr("d",
+                    d3.line()
+                        .x(function(d) { return d['x'] * SCALE - X_OFFSET})
+                        .y(function(d) {return d['y'] * SCALE - Y_OFFSET})
+                )
+        });
+
+        pumpSvg.append('text')
+            .text('Brewery')
+            .style('font-size', '8px')
+            .style('font-weight', 'bold')
+            .attr('transform', 'translate(' + 10.5 * SCALE + ',' + 11.4 * SCALE + ') rotate(-60) scale (1, -1)');
+        pumpSvg.append('rect')
+            .attr('x', '0')
+            .attr('y', '0')
+            .attr('stroke', 'black')
+            .attr('stroke-width', '1.5px')
+            .attr('height', '28')
+            .attr('width', '40')
+            .attr('fill', 'none')
+            .attr('transform', 'translate(' + 7.1 * SCALE + ',' + 12 * SCALE + ') rotate(27 20 30)');
+
+        // Major Streets and locations
+        pumpSvg.append('text')
+            .text('Work House')
+            .style('font-size', '7px')
+            .style('font-weight', 'bold')
+            .attr('transform', 'translate(' + 7.5 * SCALE + ',' + 12.2 * SCALE + ') rotate(27) scale (1, -1)');
+        pumpSvg.append('text')
+            .text('Broad Street')
+            .style('font-size', '8px')
+            .style('font-weight', 'bold')
+            .attr('transform', 'translate(' + 9.9 * SCALE + ',' + 11.3 * SCALE + ') rotate(27) scale (1, -1)');
+        pumpSvg.append('text')
+            .text('Oxford Street')
+            .style('font-weight', 'bold')
+            .style('font-size', '8px')
+            .attr('transform', 'translate(' + 7.3 * SCALE + ',' + 15.8* SCALE + ') rotate(12) scale (1, -1)');
+        pumpSvg.append('text')
+            .text('Regent Street')
+            .style('font-weight', 'bold')
+            .style('font-size', '8px')
+            .attr('transform', 'translate(' + 4.6 * SCALE + ',' + 10 * SCALE + ') rotate(-60) scale (1, -1)');
+        pumpSvg.append('text')
+            .text('Dean Street')
+            .style('font-weight', 'bold')
+            .style('font-size', '8px')
+            .attr('transform', 'translate(' + 13.8 * SCALE + ',' + 13.7 * SCALE + ') rotate(-65) scale (1, -1)');
+        pumpSvg.append('text')
+            .text('Brewer Street')
+            .style('font-weight', 'bold')
+            .style('font-size', '8px')
+            .attr('transform', 'translate(' + 10.4 * SCALE + ',' + 6.5 * SCALE + ') rotate(45) scale (1, -1)');
+    }
+
+    const addPumps = (pumps) => {
+        pumps.forEach((cords) => {
+            pumpSvg.append('circle')
+                .style("fill", PUMP_COLOR)
+                .attr("cx", cords['x'] * SCALE - X_OFFSET)
+                .attr("cy", cords['y'] * SCALE - Y_OFFSET)
+                .attr("r", 7)
+        })
+    }
+
+    const createLegend = () => {
+        const legendHeight = 110;
+        const legendWidth = 350;
+
+        pumpLegendSvg.append('rect')
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("height", legendHeight)
+            .attr("width", legendWidth)
+            .style("stroke", 'black')
+            .style("fill", "none")
+            .style("stroke-width", 1.5);
+
+        pumpLegendSvg.append('circle')
+            .style("fill", PUMP_COLOR)
+            .attr("cx", 20)
+            .attr("cy", 20)
+            .attr("r", 7)
+
+        pumpLegendSvg.append("text")
+            .attr("y", 25)
+            .attr("x", 30)
+            .text("Pumps")
+
+        pumpLegendSvg.append('rect')
+            .style("fill", FEMALE_COLOR)
+            .attr("x", 15)
+            .attr("y", 35)
+            .attr("height", 10)
+            .attr("width", 10)
+
+        pumpLegendSvg.append("text")
+            .attr("y", 45)
+            .attr("x", 30)
+            .text("Female (color)")
+
+        pumpLegendSvg.append('rect')
+            .style("fill", MALE_COLOR)
+            .attr("x", 15)
+            .attr("y", 55)
+            .attr("height", 10)
+            .attr("width", 10)
+
+        pumpLegendSvg.append("text")
+            .attr("y", 65)
+            .attr("x", 30)
+            .text("Male (color)")
+
+        const ageLegendData = [[0, "0-10", 84, 30], [1, "11-20", 102, 30], [2, "21-40", 25, 195], [3, "41-60", 43, 195], [4, "61-80", 61, 195], [5, "> 80", 78, 195]]
+        ageLegendData.forEach(age => {
+            pumpLegendSvg.append('path')
+                .style("fill", 'black')
+                .attr("d", d3.symbol().type(d3.symbols[parseInt(age[0])]).size(35))
+                .attr("transform", `translate(${age[3] - 10}, ${age[2] - 5})`)
+
+            pumpLegendSvg.append("text")
+                .attr("y", age[2])
+                .attr("x", age[3])
+                .text(`Ages ${age[1]} (symbol)`)
+
+        })
+    }
+
+    const splitDeathsByDay = (deathByDays, totalDeaths) => {
+        // {date: Date, deaths: int, deathDetails: []}
+        let aggDeathData = [];
+        deathByDays.forEach((deathDay) => {
+            let deathsThisDay = deathDay['deaths'];
+            let deathDeets = [];
+            for(let i = 0; i < deathsThisDay; i++) {
+                deathDeets.push(totalDeaths.shift());
+            }
+            aggDeathData.push({date: deathDay['date'], deaths: deathDay['deaths'], deathDetails: deathDeets});
+        })
+        return aggDeathData;
+    }
+
+    const addDeathsToMap = (aggDeaths) => {
+
+        aggDeaths.forEach((deathDay) => {
+            pumpSvg.selectAll(`.death-${deathDay['date']}`)
+                .data(deathDay['deathDetails'])
+                .enter()
+                .append('path')
+                .style("fill", (d) => d['gender'] === '0' ? MALE_COLOR : FEMALE_COLOR)
+                .style("stroke-width", ".3")
+                .style('stroke', 'black')
+                .attr("class", (d) => {
+                    let deathGender = d['gender'] === '0' ? 'male' : 'female';
+                    return `death age-${d['age']} ${deathGender} date-${deathDay['date']} visible`
+                })
+                .attr("d", (d) => {
+                    return d3.symbol().type(d3.symbols[parseInt(d['age'])]).size(25)()
+                })
+                .attr("transform", function(d) {
+                    return `translate(${d['x'] * SCALE - X_OFFSET}, ${d['y'] * SCALE - Y_OFFSET})`;
+                })
+        })
+    }
+
+    const createTimeline = (aggDeaths) => {
+        const width = 550;
+        const height = 260;
+        const yBuffer = 25;
+        const xBuffer = 30;
+        const timeConv = d3.timeParse("%d-%b");
+
+        // SCALES
+        deaths = aggDeaths.map((d) => parseInt(d.deaths))
+        console.log(`DEATHS ${deaths} ${Math.max(...deaths)}`);
+        const xScale = d3.scaleTime()
+            .range([0, width])
+            .domain(d3.extent(aggDeaths, (d) => timeConv(d.date)));
+        const yScale = d3.scaleLinear()
+            .range([height, 0])
+            .domain([0, d3.max(aggDeaths, (d) => +d.deaths + yBuffer)]);
+
+        //-----------------------------AXES-----------------------------//
+        const yaxis = d3.axisLeft().scale(yScale)
+        const xaxis = d3.axisBottom().scale(xScale).ticks(d3.timeDay.every(4)).tickFormat(d3.timeFormat('%d-%b')).tickPadding(10);
+
+        timelineSvg.attr('transform', 'translate(100, 50)')
+        timelineSvg.append("g")
+            .attr("class", "axis")
+            .attr("transform", `translate(${xBuffer}, ${height})`)
+            .call(xaxis);
+
+        timelineSvg.append("g")
+            .attr("class", "axis")
+            .attr("transform", `translate(${xBuffer}, 0)`)
+            .call(yaxis)
+            .append("text")
+            .attr("transform", `rotate(-90)`)
+
+        // Add X axis label:
+        timelineSvg.append("text")
+            .attr("text-anchor", "end")
+            .attr("x", width / 2 + 20)
+            .attr("y", height + 50)
+            .text("Date");
+
+        // Y axis label:
+        timelineSvg.append("text")
+            .attr("text-anchor", "end")
+            .attr("transform", "rotate(-90)")
+            .attr("y", -10)
+            .attr("x", -110)
+            .text("Deaths")
+
+        // Title
+        timelineSvg.append("text")
+            .attr("text-anchor", "end")
+            .attr("y", 0)
+            .attr("x", width / 2)
+            .text("Deaths Per Day")
+        //----------------------------LINES-----------------------------//
+        timelineSvg.selectAll('.death-timeline')
+            .data(aggDeaths)
+            .enter()
+            .append('rect')
+            .attr('class', 'death-timeline')
+            .attr('width', d => (width / aggDeaths.length) + 1)
+            .attr('height', height)
+            .attr('fill', 'blue')
+            .style('opacity', '0')
+            .attr("transform", d => `translate(${20 + xScale(timeConv(d.date))}, 0)`)
+            .on('mouseout', function() { // on mouse out hide line, circles and text
+                timelineSvg.selectAll(`.date-${d3.select(this).data()[0].date}`)
+                    .style("opacity", "0")
+                    .attr("transform", (d, i) => {
+                        if (d.date !== undefined) {
+                            return `translate(0,0)`
+                        }
+                    })
+            })
+            .on('mouseover', function(event, datum) { // on mouse in show line, circles and text
+                const mouse = d3.pointer(event);
+                timelineSvg.selectAll(`.date-${d3.select(this).data()[0].date}`)
+                    .style("opacity", "1")
+                    .attr("transform", (d, i) => {
+                        if (d.date !== undefined) {
+                            return `translate(${xScale(timeConv(d.date))},${yScale(d.deaths)})`
+                        }
+
+                    })
+                timelineSvg.selectAll(`text.date-${d3.select(this).data()[0].date}`)
+                    .style("opacity", "1")
+                    .attr("transform", (d, i) => {
+                        if (d.date !== undefined) {
+                            return `translate(${xScale(timeConv(d.date)) + 10},${yScale(d.deaths) - 5})`
+                        }
+                    })
+
+                let dateCssSelector = `.date-${d3.select(this).data()[0].date}`;
+
+                filterPumps(dateCssSelector);
+            })
+
+        let rightBuffer = xBuffer + 20
+        let leftBuffer = xBuffer - 80
+        let rectThickness = 60
+        const rectData = [{x1:leftBuffer , y1:-rectThickness, x2:leftBuffer + rectThickness, y2:height + rectThickness}, // left of timeline
+            {x1:leftBuffer, y1:-rectThickness, x2:width + rightBuffer, y2:rectThickness - 40}, // top of timeline
+            {x1:width + rightBuffer, y1:0, x2:width + rightBuffer + rectThickness, y2:height + rectThickness}, // right of timeline
+            {x1:leftBuffer, y1:height + 25, x2: width + rightBuffer + rectThickness, y2: height + rectThickness * 2} // bottom of timeline
+            ]
+
+        // Need a border to reapply the gender and age filters
+        timelineSvg.selectAll('timeline-border')
+            .data(rectData)
+            .enter()
+            .append('rect')
+            .attr("fill", "red")
+            .style('opacity', '0')
+            .attr("class", "timeline-border")
+            .attr("x", d => d.x1)
+            .attr("y", d => d.y1)
+            .attr("width", d => {
+                console.log(d);
+                return d.x2 - d.x1
+            })
+            .attr("height", d => {
+                console.log(d);
+                return d.y2 - d.y1
+            })
+            .on('mouseover', () => {
+                filterPumps();
+            });
+
+        timelineSvg.append("path")
+            .datum(aggDeaths)
+            .attr("class", 'line')
+            .attr("stroke", "#129dbc")
+            .attr("fill", "none")
+            .attr("stroke-width", 1.5)
+            .attr("transform", `translate(${xBuffer}, 0)`)
+            .attr("d", d3.line()
+                .x((d) => {
+                    return xScale(timeConv(d.date));
+                })
+                .y((d) => {
+                    return yScale(parseInt(d.deaths));
+                })
+            );
+
+        const mouseG = timelineSvg.append("g")
+            .attr("class", "mouse-over-effects")
+            .attr("transform", `translate(${xBuffer}, 0)`);
+
+        // this is the vertical line
+        mouseG.append("path")
+            .attr("class", "mouse-line")
+            .style("stroke", "black")
+            .style("stroke-width", "1px")
+            .style("opacity", "0")
+
+        // here's a g for each circle and text on the line
+        const mousePerLine = mouseG.selectAll('.mouse-per-line')
+            .data(aggDeaths)
+            .enter()
+            .append("g")
+            .attr("class", "mouse-per-line")
+
+        // the circle
+        mousePerLine.append("circle")
+            .attr("r", 3)
+            .style("stroke", "#129dbc")
+            .style("fill", "#129dbc")
+            .style("stroke-width", "1px")
+            .attr('class', d => `date-${d.date}`)
+            .style("opacity", "0");
+
+        // the text
+        mousePerLine.append("text")
+            .attr('class', d => `date-${d.date}`)
+            .text(d => `Deaths: ${d.deaths}    Date: ${d.date}`)
+            .style('opacity', '0');
+    }
+
+    updateAgeChart = () => {
+        pumpSvg.selectAll('')
+    }
+
+    createAgeDistributionBarChat = (aggDeaths) => {
+        let barWidth = 300;
+        barHeight = 190;
+
+        const genderBarChart = d3.select("#gender-bar-chart");
+        const ageBarChart = d3.select("#age-bar-chart")
+
+        // parse out for bar charts
+        let genders = {male: [], female: []};
+        let ages = {0: [], 1: [], 2: [], 3: [], 4: [], 5: []}
+        aggDeaths.forEach(day => {
+            let m = 0;
+            let f = 0;
+            let a = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+            day.deathDetails.forEach(deet => {
+                if (deet.gender === '0') {
+                    m++;
+                } else {
+                    f++;
+                }
+                a[deet.age]++
+            });
+            genders['male'].push({date: day, deaths: m})
+            genders['female'].push({date: day, deaths: f})
+            Object.keys(a).forEach((key) => {
+                ages[key].push({date: day, deaths: a[key]})
+            });
+        });
+
+        let reducedMales = genders['male'].reduce((accum, obj) => accum + parseInt(obj.deaths), 0)
+        let reducedFemales = genders['female'].reduce((accum, obj) => accum + parseInt(obj.deaths), 0)
+        genderMax = Math.max(reducedMales, reducedFemales) + 13;
+
+        // Add axis scales
+        xGenderScale = d3.scaleBand().range([0, barWidth]).domain(['male', 'female']).padding(0.4)
+        yGenderScale = d3.scaleLinear().rangeRound([barHeight, 0]).domain([0, genderMax]);
+
+        // Add axis
+        const genderBarG = genderBarChart.append("g")
+            .attr("transform", "translate(55, 20)");
+
+        genderBarG.append("g")
+            .attr("transform", "translate(0," + barHeight + ")")
+            .call(d3.axisBottom().scale(xGenderScale).ticks(2));
+
+        genderBarG.append("g")
+            .call(d3.axisLeft(yGenderScale).ticks(10))
+            .append("text")
+            .attr("text-anchor", "end")
+            .text("value");
+
+        // Add X axis label:
+        genderBarG.append("text")
+            .attr("text-anchor", "end")
+            .attr("x", barWidth / 2 + 20)
+            .attr("y", barHeight + 40)
+            .text("Gender");
+
+        // Y axis label:
+        genderBarG.append("text")
+            .attr("text-anchor", "end")
+            .attr("transform", "rotate(-90)")
+            .attr("y", -40)
+            .attr("x", - 50)
+            .text("Total Deaths")
+
+        // Title
+        genderBarG.append("text")
+            .attr("text-anchor", "end")
+            .attr("y", 0)
+            .attr("x", 200)
+            .text("Deaths by Gender")
+
+        // female rect
+        genderBarG
+            // .data(genders['female'])
+            // .enter()
+            // .data([0, 1, 2])
+            .append('rect')
+            .attr('class', 'death-bar .death-bar-female')
+            .attr('width', '25')
+            .attr('x', xGenderScale('female'))
+            .attr('height', `${yGenderScale(genderMax - reducedFemales)}`)
+            .attr('fill', FEMALE_COLOR)
+            .style('opacity', '1')
+            .attr("transform", `translate(${xGenderScale('female') - 150}, ${barHeight - yGenderScale(genderMax - reducedFemales)})`)
+
+        // males rect
+        genderBarG
+            // .data(genders['male'])
+            // .enter()
+            // .data([0])
+            .append('rect')
+            .attr('class', 'death-bar .death-bar-male')
+            .attr('width', '25')
+            .attr('x', xGenderScale('male'))
+            .attr('height', `${yGenderScale(genderMax - reducedMales)}`)
+            .attr('fill', MALE_COLOR)
+            .style('opacity', '1')
+            .attr("transform", `translate(${xGenderScale('male') - 25}, ${barHeight - yGenderScale(genderMax - reducedMales)})`)
+
+        // Age Bar chart
+        let ageBarWidth = 500;
+        maxAgeHeight = 200;
+        ageGroups = [[0, "0-10"], [1, "11-20"], [2, "21-40"], [3, "41-60"], [4, "61-80"], [5, "> 80"]]
+
+        // Age bar scales
+        xAgeScale = d3.scaleBand().range([0, ageBarWidth]).domain(ageGroups.map(ag => ag[1])).padding(0.4).align(.5)
+        yAgeScale = d3.scaleLinear().rangeRound([barHeight, 0]).domain([0, maxAgeHeight]);
+
+        // Age bar offset
+        const ageBarG = ageBarChart.append("g")
+            .attr("transform", "translate(55, 20)");
+
+        // Age bar axis
+        ageBarG.append("g")
+            .attr("transform", "translate(0," + barHeight + ")")
+            .call(d3.axisBottom().scale(xAgeScale).ticks(2));
+
+        ageBarG.append("g")
+            .call(d3.axisLeft(yAgeScale).ticks(10))
+            .append("text")
+            .attr("text-anchor", "end")
+            .text("value");
+
+        // Add X axis label:
+        ageBarG.append("text")
+            .attr("text-anchor", "end")
+            .attr("x", ageBarWidth / 2 + 20)
+            .attr("y", barHeight + 40)
+            .text("Age Group");
+
+        // Y axis label:
+        ageBarG.append("text")
+            .attr("text-anchor", "end")
+            .attr("transform", "rotate(-90)")
+            .attr("y", -40)
+            .attr("x", - 50)
+            .text("Total Deaths")
+
+        // Title
+        ageBarG.append("text")
+            .attr("text-anchor", "end")
+            .attr("y", 0)
+            .attr("x", 300)
+            .text("Deaths by Age Group")
+
+        // iterate through age info to create rects
+        ageGroups.forEach(ag => {
+            let reducedAge = ages[ag[0]].reduce((accum, obj) => accum + parseInt(obj.deaths), 0)
+            ageBarG
+                // .data([0])
+                .append('rect')
+                .attr('class', `death-bar .death-bar-age-${ag}`)
+                .attr('width', '25')
+                .attr('x', xAgeScale(ag[1]))
+                .attr('height', d => {
+                    return  yAgeScale(maxAgeHeight - reducedAge)
+                })
+                .attr('fill', 'steelblue')
+                .style('opacity', '1')
+                .attr("transform", (d,i) => {
+                    return `translate(${xAgeScale(ag[1]) - (20 + (78 * ag[0]))}, ${barHeight - yAgeScale(maxAgeHeight - reducedAge)})`
+                })
+        });
+
+    }
+
+    Promise.all(files).then((data) => {
+        // This is to prevent the selectboxes from getting out of sync
+        document.getElementById("deathByAge").value = '-1';
+        document.getElementById("deathByGender").value = '-1';
+
+        createMap(data[0]);
+        addPumps(data[1]);
+        let aggDeaths = splitDeathsByDay(data[2], data[3]);
+        addDeathsToMap(aggDeaths);
+        createLegend();
+        createTimeline(aggDeaths);
+        createAgeDistributionBarChat(aggDeaths);
+    });
+
+</script>
+</body>
+</html>

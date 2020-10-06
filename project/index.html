@@ -3,7 +3,7 @@
   <head>
     <title>Rahul Yadav - Project 1</title>
     <style>
-            ul {
+        ul.header {
                 list-style-type: none;
                 position: fixed;
                 top: 0;
@@ -13,33 +13,734 @@
                 overflow: hidden;
                 background-color: #333;
             }
-            li {
+        ul.header>li{
                 display: inline;
                 float: left;
             }
-            li a {
+        ul.header>li a {
                 display: block;
                 color: white;
                 text-align: center;
                 padding: 14px 16px;
                 text-decoration: none;
             }
-            li a:hover {
+        ul.header>li a:hover{
                 background-color: #111;
             }
-            .active {
+        ul.header>li>a.active {
                 background-color: #4CAF50;
             }
+
+        .display_row_1{
+            display: flex;
+            flex-direction: row;
+        }
+
+        .display_row_1>.map_legend_svg>#map_legend{
+               
+                border:2px solid;
+                border-color: black;
+                width: 500px; 
+                height: 100px; 
+                margin-top: 35px; 
+                display:flex;
+                flex-direction:row;
+        }
+       
+        .display_row_1>.deaths_by_age{
+            margin-top: 35px; 
+            margin-left: 20px;
+            display:flex;
+            flex-direction:column;
+        }
+        .display_row_1>.deaths_by_gender{
+            margin-top: 35px; 
+            margin-left: 20px;
+            display:flex;
+            flex-direction:column;
+        }
+    
+        .display_row_2{
+            margin-top: 20px;
+            display:flex;
+            flex-direction:row;
+        }
+        .display_row_2>.map_svg>#map_frame{
+                border:2px solid;
+                border-color: black;
+                transform: scale(1,-1);
+                display:flex;
+                flex-direction:row;
+        }
+
+        .display_row_2>.gender_distribution>#gender_distribution{
+            border:2px solid;
+            border-color: black;
+            width: 250px; 
+            height: 500px; 
+            margin-left: 20px; 
+            display:flex;
+            flex-direction:row;
+        }
+        .display_row_2>.age_distribution>#age_distribution{
+            border:2px solid;
+            border-color: black;
+            width: 400px; 
+            height: 500px; 
+            margin-left: 20px;
+            display:flex;
+            flex-direction:row;
+        }
+        .display_row_3{
+            display:flex;
+            flex-direction:row;
+        }
+        .display_row_3>.timeline_graph>#timeline_graph{
+            border:2px solid;
+            border-color: black;
+            width: 1000px; 
+            height: 650px; 
+            margin-top: 20px;
+            display:flex;
+            flex-direction:row;
+        }
+
     </style>
+    <script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>;
+    <script src="https://d3js.org/d3-time.v2.min.js"></script>
+    <script src="https://d3js.org/d3-time-format.v3.min.js"></script>
   </head>
   <body>
-    <ul>
+    <ul class="header">
         <li><a class="active" href="index.html">Visualisation</a></li>
         <li><a href="design_document.html">Design Document</a></li>
         <li><a href="video_walkthrough.html">Video Walkthrough</a></li>
-        <li style="float:right"><a href="https://khreda.com/teaching/2020/H517/project1/">H-517 PROJECT 1</a></li>
+        <li><a href="about.html">About</a></li>
     </ul>
-    <h2>Main</h2>
+    <div class = "display_row_1">
+        <div class="map_legend_svg">
+            <svg id="map_legend" ></svg>
+        </div>
+
+        <div class="deaths_by_age">
+            
+            <input type="checkbox" class="checkbox" id="deaths_by_age" value="age" unchecked><label>Display Age Distribution on Map</label>
+            <!--
+            <label for="deaths_by_age">Filter by Age</label>
+            <select name="deaths_by_age" id="deaths_by_age" onchange="filterPumps()">
+                <option value="-1">All</option>
+                <option value="0">0-10</option>
+                <option value="1">11-20</option>
+                <option value="2">21-40</option>
+                <option value="3">41-60</option>
+                <option value="4">61-80</option>
+                <option value="5">> 80</option>
+            </select>
+        -->
+        </div>
+
+        <div class="deaths_by_gender">
+            <input type="checkbox" class="checkbox" id="deaths_by_gender" value="gender" unchecked><label>Display Gender Distribution on Map</label>
+            <!--
+            <label for="deaths_by_gender">Filter by Gender</label>
+            <select name="deaths_by_gender" id="deaths_by_gender" onchange="filterPumps()" >
+                <option value="-1">All</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+            </select>
+        -->
+        </div>
+            <!--
+            <div id = "information">
+                <br>
+                <p style="margin:0;">Hover over <strong>Deaths Per Day</strong> to filter by day</p>
+                <p style="margin:0;">Scroll or click/drag to move around the map</p>
+            </div>
+            -->
+    </div>
+    <div class ="display_row_2">
+        <div class="map_svg">
+            <svg id="map_frame" viewBox="3 3 17 16" preserveAspectRatio="none"></svg>
+        </div>
+        <div class="gender_distribution">
+            <svg id="gender_distribution">
+                <text id="ylabel">Deaths</text>
+                <text id="xlabel">Gender</text>
+                <text id="malelabel">Male</text>
+                <text id="femalelabel">Female</text>
+            </svg>
+        </div>
+        <div class="age_distribution">
+            <svg id="age_distribution">
+                <text id="ylabel">Age Groups</text>
+                <text id="xlabel">Deaths</text>
+            </svg>
+        </div>
+    </div> 
+
+    <div class ="display_row_3">
+        <div class="timeline_graph">
+            <svg id="timeline_graph">
+                <text id="xlabel">Date</text>
+                <text id="ylabel">Deaths</text>
+                <text id="mainlabel">Deaths per Day</text>
+            </svg>
+        </div>
+    </div> 
+
+    <script type="text/javascript">
+        const mf = d3.select('#map_frame');
+        const map_legend = d3.select('#map_legend').append('g')
+        var gender_graph = d3.select('#gender_distribution');
+        var age_graph = d3.select('#age_distribution');
+        var timeline_graph = d3.select('#timeline_graph');
+
+        var ageColor = ["#01F0CB", "#4D7FEB", "#EBE20B", "#EB349E", "#EB8705", "#EB9FE6"];
+        var newEndDate = 42;
+        var allDeaths;
+
+        const map = d3.select('#map_frame')
+            .attr('height', '500')
+            .attr('width', '500')
+            .call(d3.behavior.zoom()
+                    .scaleExtent([1, 10])
+                    .on("zoom", function () {
+                        mf.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+                    }))
+            .append('g');
+        
+
+        // d3.selectAll("#map_frame").remove();
+        map.append('rect')
+            .style('width',"100")
+            .style('height', "100")
+            .style('fill', 'white');
+            
+            
+        const setup_streets = () => {
+            // Mapping Streets
+            d3.json("datasets/streets.json", function (street_data) { 
+                    for (segment=0; segment<street_data.length; segment++) {
+                        for (point=0; point<street_data[segment].length-1; point++) {
+                            map.append('line')
+                                .style('stroke', 'black')
+                                .style('fill', 'none')
+                                .style('stroke-width', '0.05')
+                                .style('stroke-linecap', 'round')
+                                .attr('x1', street_data[segment][point]['x'])
+                                .attr('y1', street_data[segment][point]['y'])
+                                .attr('x2', street_data[segment][point+1]['x'])
+                                .attr('y2', street_data[segment][point+1]['y']);
+                        }}});
+                    }
+        
+        const map_streetnames_pumps = () => {
+                // Work House Block
+                map.append('rect')
+                    .attr('stroke', 'black')
+                    .attr('stroke-width', '0.05')
+                    .attr('x', '15.7')
+                    .attr('y', '5.5')
+                    .attr('height', '1')
+                    .attr('width', '1.3')
+                    .style('fill', 'white')
+                    .attr('transform', 'rotate(30)');
+
+                map.append('text')
+                    .text('Work House')
+                    .style('font-size', '0.23')
+                    .attr('transform', 'translate(10.7, 13) rotate(30) scale (1, -1)');
+            
+                // Brewery
+                map.append('text')
+                    .text('Brewery')
+                    .style('font-size', '0.23')
+                    .attr('transform', 'translate(13.7, 12.2) rotate(-60) scale (1, -1)');
+                
+                // Oxford Street
+                map.append('text')
+                    .text('Oxford Street')
+                    .style('font-size', '0.23')
+                    .attr('transform', 'translate(10.7, 16.7) rotate(10) scale (1, -1)');
+                
+                // Dean Street
+                map.append('text')
+                    .text('Dean Street')
+                    .style('font-size', '0.23')
+                    .attr('transform', 'translate(16.9, 14.7) rotate(-65) scale (1, -1)');
+                
+                // Dean Street
+                map.append('text')
+                    .text('Regent Street')
+                    .style('font-size', '0.23')
+                    .attr('transform', 'translate(7.8, 10.8) rotate(-60) scale (1, -1)');
+                
+                // Brewer Street
+                map.append('text')
+                    .text('Brewer Street')
+                    .style('font-size', '0.23')
+                    .attr('transform', 'translate(13.8, 7.5) rotate(45) scale (1, -1)');
+
+                // Broad Street
+                map.append('text')
+                    .text('Broad Street')
+                    .style('font-size', '0.23')
+                    .attr('transform', 'translate(13.2, 12.2) rotate(30) scale (1, -1)');
+                        
+
+                // Mapping Pumps
+                d3.csv("datasets/pumps.csv", function (pump_data) { 
+                        for (pump = 0; pump < pump_data.length; pump++) {   
+                            map.append('circle')
+                                .attr('cx', pump_data[pump].x)
+                                .attr('cy', pump_data[pump].y)
+                                .attr('r', '0.1')
+                                .attr('fill', 'grey')
+                                .attr('stroke', 'grey')
+                                .attr('stroke-width', '0.1');
+                        }});    
+                    }
+
+        // Legend
+        const setup_legend = () => {
+            const legendHeight = 100;
+            const legendWidth = 500;
+
+            map_legend.append('rect')
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("height", legendHeight)
+                .attr("width", legendWidth)
+                .style("fill", "none");
+
+            map_legend.append("text")
+            .attr("y", 25)
+            .attr("x", 15)
+            .text("Map Legend : ")
+
+            map_legend.append('circle')
+            .style("fill", 'grey')
+            .attr("cx", 20)
+            .attr("cy", 40)
+            .attr("r", 7)
+
+            map_legend.append("text")
+            .attr("y", 45)
+            .attr("x", 30)
+            .text("Pumps")
+
+            map_legend.append('rect')
+            .style("fill", 'green')
+            .attr("x", 15)
+            .attr("y", 55)
+            .attr("height", 10)
+            .attr("width", 10)
+
+            map_legend.append("text")
+            .attr("y", 65)
+            .attr("x", 30)
+            .text("Female (color)")
+
+            map_legend.append('rect')
+            .style("fill", 'red')
+            .attr("x", 15)
+            .attr("y", 75)
+            .attr("height", 10)
+            .attr("width", 10)
+
+            map_legend.append("text")
+            .attr("y", 85)
+            .attr("x", 30)
+            .text("Male (color)")
+    }
+    var died = 0;
+
+    const create_timeline_graph= () => {
+        
+        d3.csv("datasets/deathdays.csv", function (data) {
+                var bar_scale = 2.75;
+                var bar_padding = 3;
+                var margin_left = 60;
+                var margin_bottom = 70;
+                var margin_top = 40;
+                var chartHeight = 600;
+                var bar_width = 20;
+                var hmax = 10;
+                
+                for (x = 0; x < data.length; x++) {
+                    if (data[x].deaths == 0) {
+                        timeline_graph.append('line')
+                            .attr('x1', margin_left + x * (bar_width + bar_padding) + 2)
+                            .attr('x2', margin_left + x * (bar_width + bar_padding) + 2 + bar_width)
+                            .attr('y1', (chartHeight - data[x].deaths * bar_scale - margin_bottom))
+                            .attr('y2', (chartHeight - data[x].deaths * bar_scale - margin_bottom))
+                            .style('stroke', 'black')
+                            .style('stroke-width', '1')
+                            .on('mouseover', function () {
+                                d3.select(this).attr('stroke', 'green')
+                            })
+                            .on('mouseout', function () {
+                                d3.select(this).attr('stroke', 'black')
+                            });
+                    }
+                    else {
+                        timeline_graph.append('rect')
+                            .attr('x', margin_left+ x * (bar_width + bar_padding) + 2)
+                            .attr('y', (chartHeight - data[x].deaths * bar_scale - margin_bottom))
+                            .attr('height', data[x].deaths * bar_scale)
+                            .attr('width', bar_width)
+                            .attr('fill', 'black')
+                            .attr('class', 'dead')
+                            .attr("fill-opacity", "1")
+                            .attr('id', x)
+                            .attr('title', data[x].date)
+                            .on('mouseover', function () {
+                                d3.select(this).attr('fill', 'green')
+                            })
+                            .on('mouseout', function () {
+                                d3.select(this).attr('fill', 'black')
+                            })
+                            .on('click', function (d, i) {
+                                console.log('id: ' + d3.select(this).attr('id'));
+                                newEndDate = Number(d3.select(this).attr('id'));
+                                update();
+                            });
+                        if (Number(data[x].deaths) > hmax) {
+                            hmax = Number(data[x].deaths);
+                        }
+                    }
+                    died = died + Number(data[x].deaths);
+                }
+
+                //Add scales to the bar chart
+                var timeFormat = d3.time.format('%d-%b');
+                var xScale = d3.time.scale()
+                    .domain([timeFormat.parse(data[0].date), timeFormat.parse(data[data.length - 1].date)])
+                    .range([margin_left + 2 + (bar_width / 2), 1000 - (bar_width / 2)]);
+                var yScale = d3.scale.linear()
+                    .domain([0, (chartHeight - margin_top - margin_bottom) / bar_scale])
+                    .range([chartHeight - margin_bottom, margin_top]);
+        
+
+                var xAxis = d3.svg.axis()
+                    .scale(xScale)
+                    .orient("bottom")
+                    .ticks(21)
+                    .tickFormat(d3.time.format("%d-%b"));
+                var yAxis = d3.svg.axis()
+                    .scale(yScale)
+                    .orient("left")
+                    .ticks(10);
+
+                timeline_graph.append("g")
+                    .attr('class', 'axis')
+                    .attr('transform', 'translate(0,' + (chartHeight - margin_bottom) + ')')
+                    .call(xAxis)
+                    .selectAll("text")
+                    .style("text-anchor", "end")
+                    .attr("dx", "-.8em")
+                    .attr("dy", ".15em")
+                    .attr("transform", "rotate(-65)");
+                timeline_graph.append('g')
+                    .attr('class', 'axis')
+                    .attr('transform', 'translate(' + margin_left + ",0)")
+                    .call(yAxis);
+                timeline_graph.select('#xlabel')
+                    .style('text-anchor', 'center')
+                    .style('font-size', 25)
+                    .attr('x', 450)
+                    .attr('y', 620);
+                timeline_graph.select('#ylabel')
+                    .style('font-size', 25)
+                    .style('text-anchor', 'center')
+                    .attr('transform', 'translate(' + (margin_left / 3) + ',' + ((chartHeight - margin_top - margin_bottom) / 2 + margin_bottom) + ') rotate(-90)');
+                timeline_graph.select('#mainlabel')
+                    .attr('x', 450)
+                    .attr('y', 50)
+                    .style('font-size', 35)
+                    .style('text-anchor', 'middle');
+
+                return (died);
+            });
+    }
+
+    const generate_age_sex_distributions = () => {
+        d3.csv("datasets/deaths_age_sex.csv", function (data) {
+            var gendermargin = { top: 30, right: 10, bottom: 80, left: 30 };
+            var agemargin = { top: 30, right: 10, bottom: 80, left: 50 };
+            var ageColor = ["#01F0CB", "#4D7FEB", "#EBE20B", "#EB349E", "#EB8705", "#EB9FE6"];
+            var maleTotal = 0;
+            var femaleTotal = 0;
+            var genderScale = 1.1;
+            var grectpad = 40;
+            var gmax = 300;
+            var ageCounts = [0, 0, 0, 0, 0, 0];
+            var ageLabels = ["0-10", "11-20", "21-40", "41-60", "61-80", ">80"];
+            var agescale = 1;
+
+            allDeaths = data;
+            var defclass = "";
+            for (d = 0; d < died; d++) {
+                if (Number(data[d].gender) == 1) {
+                    defclass = "death female age" + data[d].age;
+                    femaleTotal = femaleTotal + 1;
+                    map.append('circle')
+                        .attr('cx', data[d].x)
+                        .attr('cy', data[d].y)
+                        .attr('r', '0.09')
+                        .attr('fill', 'green')
+                        .attr('class', defclass)
+                        .attr('id', d);
+                    ageCounts[Number(data[d].age)]++;
+                }
+                else {
+                    defclass = "death male age" + data[d].age;
+                    maleTotal = maleTotal + 1;
+                    map.append('circle')
+                        .attr('cx', data[d].x)
+                        .attr('cy', data[d].y)
+                        .attr('r', '0.09')
+                        .attr('fill', 'red')
+                        .attr('class', defclass)
+                        .attr('id', d);
+                    ageCounts[Number(data[d].age)]++;
+                }
+            }
+
+            gender_bar_width = 25;
+            //add the chart for gender, icon indicators & labels
+            gender_graph.append('rect')
+                .attr('x', 100)
+                .attr('y', 47.5)
+                .attr('width', gender_bar_width)
+                .attr('height', maleTotal * genderScale)
+                .attr('fill', 'red')
+                .attr('id', 'malerect');
+
+            gender_graph.select('#malelabel')
+                .attr('x', 100)
+                .attr('y', 380)
+                .style('text-anchor', 'middle')
+                .text('Male: ' + maleTotal);
+
+            gender_graph.append('rect')
+                .attr('x', 170)
+                .attr('y', 44.3)
+                .attr('width', gender_bar_width)
+                .attr('height', femaleTotal * genderScale)
+                .attr('fill', 'green')
+                .attr('id', 'femalerect');
+            gender_graph.select('#femalelabel')
+                .attr('x', 190)
+                .attr('y', 380)
+                .style('text-anchor', 'middle')
+                .text('Female: ' + femaleTotal);
+
+            gender_graph.select('#ylabel')
+                .style('text-anchor', 'center')
+                .attr('transform', 'translate(' + 20 + ',' + 240 + ') rotate(-90)');
+
+            gender_graph.select('#xlabel')
+                .style('text-anchor', 'center')
+                .attr('transform', 'translate(120, 410)');
+
+            gender_graph.append('text')
+                .text('Gender Distribution')
+                .style('font-size', 20)
+                .attr('x', 40)
+                .attr('y', 460)
+
+            var gender_graph_yscale = d3.scale.linear()
+                .domain([0, 300])
+                .range([360, 30]);
+            var gender_graph_yaxis = d3.svg.axis()
+                .scale(gender_graph_yscale)
+                .orient("left")
+                .ticks(15);
+            gender_graph.append('g')
+                .attr('class', 'axis')
+                .attr('transform', 'translate(' + 60 + ",0)")
+                .call(gender_graph_yaxis);
+
+
+            //create ages chart
+            var age_graph_padding = 10;
+            var age_graph_height = 55;
+            
+            for (d = 0; d < ageCounts.length; d++) {
+                age_graph.append('rect')
+                    .attr('x', 120)
+                    .attr('y', 25 + d * (age_graph_height + age_graph_padding))
+                    .attr('height', age_graph_height)
+                    .attr('width', ageCounts[d] * agescale)
+                    .attr('fill', ageColor[d]);
+
+                console.log('mmm', agescale)
+                age_graph.append('text')
+                    .text(ageCounts[d])
+                    .attr('text-anchor', 'middle')
+                    .attr('x', ageCounts[d] + 140)
+                    .attr('y', agemargin.top + d * (age_graph_height + age_graph_padding) + age_graph_height / 2)
+                    .attr('id', 'agelabel');
+            }
+            var age_graph_yscale = d3.scale.ordinal()
+                .domain(ageLabels)
+                .rangePoints([50, 390]);
+
+            var age_graph_yaxis = d3.svg.axis()
+                .scale(age_graph_yscale)
+                .orient("left")
+                .tickValues(ageLabels);
+
+            age_graph.append('g')
+                .attr('class', 'axis')
+                .attr('transform', 'translate(' + 110 + ",0)")
+                .call(age_graph_yaxis);
+            
+            age_graph.select('#ylabel')
+                .style('text-anchor', 'center')
+                .attr('transform', 'translate(' + 40 + ',' + 240 + ') rotate(-90)');
+
+            age_graph.select('#xlabel')
+                .style('text-anchor', 'center')
+                .attr('transform', 'translate(' + 180 + ',' + 430 + ') ');
+
+            age_graph.append('text')
+                .text('Age Distribution')
+                .style('font-size', 20)
+                .attr('x', 120)
+                .attr('y', 460)
+        });
+    }
+
+    function update() {
+            var gendermargin = { top: 30, right: 10, bottom: 80, left: 30 };
+            var agemargin = { top: 30, right: 10, bottom: 80, left: 50 };
+            var ageColor = ["#01F0CB", "#4D7FEB", "#EBE20B", "#EB349E", "#EB8705", "#EB9FE6"];
+            var maleTotal = 0;
+            var femaleTotal = 0;
+            var genderScale = 1.1;
+            var grectpad = 40;
+            var gmax = 300;
+            var ageCounts = [0, 0, 0, 0, 0, 0];
+            var ageLabels = ["0-10", "11-20", "21-40", "41-60", "61-80", ">80"];
+            var agescale = 1;
+
+            gender_graph_change = d3.select('#deaths_by_gender');
+            age_graph_change = d3.select('#deaths_by_age');
+            if (gender_graph_change.property("checked")) {
+                if (age_graph_change.property("checked")) {
+                    console.log("age & gender")
+                    map.selectAll("death").attr('stroke-width', '1');
+                    map.selectAll(".age0").attr('fill', ageColor[0]);
+                    map.selectAll(".age1").attr('fill', ageColor[1]);
+                    map.selectAll(".age2").attr('fill', ageColor[2]);
+                    map.selectAll(".age3").attr('fill', ageColor[3]);
+                    map.selectAll(".age4").attr('fill', ageColor[4]);
+                    map.selectAll(".age5").attr('fill', ageColor[5]);
+                    map.selectAll(".male").attr('fill', 'red').attr('stroke-opacity', '1');
+                    map.selectAll(".female").attr('fill', 'green').attr('stroke-opacity', '1');
+                }
+                else {
+                    console.log("gender only");
+                    map.selectAll(".male").attr('fill', 'red').attr('stroke-opacity', '1');
+                    map.selectAll(".female").attr('fill', 'green').attr('stroke-opacity', '0');
+                }
+            }
+            else {
+                if (age_graph_change.property("checked")) {
+                    map.selectAll(".age0").attr('fill', ageColor[0]);
+                    map.selectAll(".age1").attr('fill', ageColor[1]);
+                    map.selectAll(".age2").attr('fill', ageColor[2]);
+                    map.selectAll(".age3").attr('fill', ageColor[3]);
+                    map.selectAll(".age4").attr('fill', ageColor[4]);
+                    map.selectAll(".age5").attr('fill', ageColor[5]);
+                    map.selectAll(".male").attr('stroke-opacity', "0");
+                }
+                else {
+                    console.log("neither");
+                    map.selectAll(".male").attr('fill', 'red').attr('stroke-opacity', "0");
+                    map.selectAll(".female").attr('fill', 'green');
+                }
+
+            }
+            //updage based on age checkbox:
+            i = 0;
+            var newDeaths = 0;
+            //updates visibility of rectangles based on click
+            timeline_graph.selectAll('rect').each(function (d) {
+                if (d3.select(this).attr('id') <= newEndDate) {
+                    d3.select(this).attr("fill-opacity", "1");
+                    if (d3.select(this))
+                        newDeaths = newDeaths + (d3.select(this).attr("height") / 2.75);
+                    }
+                else {
+                    d3.select(this).attr("fill-opacity", ".4");
+                }
+            });
+            console.log('deaths:' + newDeaths);
+            //updates visibility of "deaths" based on date range
+            var maleTemp = 0;
+            var femaleTemp = 0;
+            var ageTemp = [0, 0, 0, 0, 0, 0];
+            for (i = 0; i < newDeaths; i++) {
+                if (allDeaths[i].gender == 0) {
+                    maleTemp = maleTemp + 1;
+                    ageTemp[Number(allDeaths[i].age)]++;
+                }
+                else {
+                    femaleTemp = femaleTemp + 1;
+                    ageTemp[Number(allDeaths[i].age)]++;
+                }
+            }
+            //update gender chart
+            gender_graph.select('#femalerect')
+                .attr('y', gendermargin.top + (gmax - femaleTemp) * genderScale)
+                .attr('height', femaleTemp * genderScale);
+            gender_graph.select('#malerect')
+                .attr('y', gendermargin.top + (gmax - maleTemp) * genderScale)
+                .attr('height', maleTemp * genderScale);
+            gender_graph.select('#malecir')
+                .attr('cy', gendermargin.top + (gmax - maleTemp) * genderScale - 15);
+            gender_graph.select('#femalecir')
+                .attr('cy', gendermargin.top + (gmax - femaleTemp) * genderScale - 15);
+            gender_graph.select('#femalelabel').text('Female: ' + femaleTemp);
+            gender_graph.select('#malelabel').text('Male: ' + maleTemp);
+
+            //update age chart
+            console.log("age temp:", ageTemp);
+            age_graph.selectAll('rect')
+                .attr('width', function (d, i) {
+                    return ageTemp[i] * agescale;
+                });
+            age_graph.selectAll('#agelabel')
+                .attr('x', function (d, i) {
+                    return ageTemp[i] + 140;
+                })
+                .text(function (d, i) {
+                    return ageTemp[i];
+                });
+            //update visibility of deaths
+            map.selectAll('circle').each(function (d) {
+                if (d3.select(this).attr('id') < newDeaths) {
+                    d3.select(this).attr("fill-opacity", "1");
+                }
+                else {
+                    d3.select(this).attr("fill-opacity", "0").attr('stroke-opacity', '0');
+                }
+            });
+        }
+
+        function zoom() {
+            map.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+        }
+
+    setup_legend();
+    setup_streets();
+    map_streetnames_pumps();
+    create_timeline_graph();
+    generate_age_sex_distributions();
+    </script>
     
 </body>
 </html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="https://d3js.org/d3-time.v2.min.js"></script>
+    <script src="https://d3js.org/d3-time-format.v3.min.js"></script>
+    <style>
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: black;
+            stroke-width: 1;
+            shape-rendering: crispEdges;
+        }
+        .axis text {
+            font-family: sans-serif;
+            font-size: 11px;
+        }
+    </style>
+    <title></title>
+</head>
+<!--
+    color brewer (for color picking)
+For a C you need:
+
+X: A well drawn map of the area (streets and pumps) including the locations of the deaths
+X: a timeline graph showing the number of deaths per day
+X: ability to move the mouse over the timeline graph to choose which day to visualize - this should affect the deaths visible on the map and in the graph - at minimum all cholera deaths prior to that date should be shown on the map and the graph
+x: the graph and the map should be stable (i.e., they should not move when new data is added or removed)
+   the graph and the map should be well labeled
+   you should check your visualization with a color blindness simulation tool to see that its OK
+   the map and graph should update quickly when the user interacts
+   an about screen with details on who wrote the project, where the data came from, etc.
+
+For a B you need to add:
+   more data to the map - major street names and the location of the brewery and the work house
+X: ability to easily see on the map whether each victim was male or female
+   ability to easily see on the map the age of each victim
+   additional graphs showing the distribution of deaths by sex and age overall
+
+For an A you need to add:
+   ability to cluster the data on the map into a grid that shows the number of dead in each grid cell (even with this small amount of data the points are starting to overwhelm) and the user should be able to vary the size of the clusters.
+   ability to show data from a window of days on the timeline graph
+   ability to zoom in/out and pan around the map
+-->
+<body>
+    <h1>Map</h1>
+    <div>
+        <input type="checkbox" class="checkbox" id="gender" value="gender" unchecked><label>Gender</label>
+        <input type="checkbox" class="checkbox" id="age" value="age" unchecked><label>Age</label>
+        
+    </div>
+    <svg id="map" style="border: 1px solid black; margin: 0 auto; display: inline-flex;"></svg>
+    <!--<input type="range" name="slider" id="dateSlider">-->
+    <svg id="chart" style="border: 1px solid black; margin: 0 auto; display: inline-flex;">
+        <text id="xlabel">Date</text>
+        <text id="ylabel">Deaths</text>
+        <text id="mainlabel">Deaths per Day</text>
+    </svg>
+    <script type="text/javascript">const map = d3.select('#map');
+        var chart = d3.select('#chart');
+        var imgWidth = 1000;
+        var imgHeight = 750;
+        var chartHeight = imgHeight * .5;
+        var barPad = 2;
+        var xmin = 10;
+        var xmax = 0;
+        var ymin = 10;
+        var ymax = 0;
+        map.attr("height", imgHeight).attr("width", imgWidth);
+        chart.attr("height", chartHeight).attr("width", imgWidth);
+
+        var margin = { top: 40, right: 20, bottom: 70, left: 60 };
+
+        var scale = 40.0;
+        d3.json("data/streets.json", function (data) {
+            //console.log(data)
+            var a;
+            var b;
+            var l;
+            //find x,y min & max
+            for (a = 0; a < data.length; a++) {
+                l = data[a];
+                for (b = 0; b < l.length; b++) {
+                    if (l[b].x > xmax) {
+                        xmax = l[b].x;
+                    }
+                    if (l[b].x < xmin) {
+                        xmin = l[b].x;
+                    }
+                    if (l[b].y > ymax) {
+                        ymax = l[b].y;
+                    }
+                    if (l[b].y < ymin) {
+                        ymin = l[b].y;
+                    }
+                }
+            }
+            console.log("xmin:" + xmin + "xmax: " + xmax + "ymin: " + ymin + "ymax: " + ymax);
+            map.attr('width', (xmax-xmin) * scale).attr('height', (ymax-ymin) * scale);
+            for (a = 0; a < data.length; a++) {
+                l = data[a];
+                for (b = 0; b < l.length - 1; b++) {
+                    map.append('line')
+                        .style('stroke', 'black')
+                        .style('stroke-width', '2')
+                        .attr('x1', (l[b].x-xmin) * scale)
+                        .attr('x2', (l[b + 1].x-xmin) * scale)
+                        .attr('y1', (l[b].y-ymin) * scale)
+                        .attr('y2', (l[b + 1].y-ymin) * scale);
+                    //console.log(l[b+1].x);
+                }
+            }
+        });
+        d3.csv("data/pumps.csv", function (data) {
+            //console.log(data);
+            var i = 0;
+            for (i = 0; i < data.length; i++) {
+
+                map.append('circle')
+                    .attr('cx', (data[i].x-xmin) * scale)
+                    .attr('cy', (data[i].y-ymin) * scale)
+                    .attr('r', '5')
+                    .attr('fill', 'steelblue');
+            }
+        });
+        //slider to get ending date for showing the data
+
+        var endDate = 42;
+        var newEndDate = 42;
+        var died = 0;
+        var days = 0;
+        console.log("end date: " + endDate);
+        //need to get a number to tell how many of the deaths to show
+
+        d3.csv("data/deathdays.csv", function (data) {
+            console.log(data);
+            // For the slider attr: min="10" max="100" value="50";
+            var chartScale = (xmax * scale + 10);
+            chartHeight = map.attr('height');
+            chart.attr('width', chartScale + margin.left).attr('height', chartHeight);
+            console.log("chartscale: " + chartScale);
+            var w = chartScale / data.length - barPad;
+            console.log("w: " + w);
+            
+            var hmax = 0;
+            var x = 0;
+            days = data.length;
+            var rectScale = 3;
+            for (x = 0; x < days; x++) {
+                if (data[x].deaths == 0) {
+                    chart.append('line')
+                        .attr('x1', margin.left + x * (w + barPad) + 2)
+                        .attr('x2', margin.left + x * (w + barPad) + 2 + w)
+                        .attr('y1', (chartHeight - data[x].deaths * rectScale - margin.bottom))
+                        .attr('y2', (chartHeight - data[x].deaths * rectScale - margin.bottom))
+                        .style('stroke', 'black')
+                        .style('stroke-width', '1')
+                        .on('mouseover', function () {
+                            d3.select(this).attr('stroke', 'orange')
+                        })
+                        .on('mouseout', function () {
+                            d3.select(this).attr('stroke', 'black')
+                        });
+                }
+                else {
+                    chart.append('rect')
+                        .attr('x', margin.left + x * (w + barPad) + 2)
+                        .attr('y', (chartHeight - data[x].deaths * rectScale - margin.bottom))
+                        .attr('height', data[x].deaths * rectScale)
+                        .attr('width', w)
+                        .attr('fill', 'steelblue')
+                        .attr('class', 'dead')
+                        .attr("fill-opacity", "1")
+                        .attr('id', x)
+                        .attr('title', data[x].date)
+                        .on('mouseover', function () {
+                            d3.select(this).attr('fill', 'orange')
+                        })
+                        .on('mouseout', function () {
+                            d3.select(this).attr('fill', 'steelblue')
+                        })
+                        .on('click', function (d, i) {
+                            console.log('id: ' + d3.select(this).attr('id'));
+                            //click on bar graph picks the end date of the data display
+                            newEndDate = Number(d3.select(this).attr('id'));
+                            update();
+                            //d3.select('.date').text('Showing Data from Start to')
+                        });
+                    console.log("deaths:" + data[x].deaths);
+                    console.log("hmax: " + hmax);
+                    if (Number(data[x].deaths) > hmax) {
+                        hmax = Number(data[x].deaths);
+                    }
+                }
+                died = died + Number(data[x].deaths);
+            }
+            
+            //Add scales to the bar chart
+            var timeFormat = d3.time.format('%d-%b');
+            //console.log("start date: " + timeFormat.parse(data[1].date));
+            var xScale = d3.time.scale()
+                .domain([timeFormat.parse(data[0].date), timeFormat.parse(data[data.length - 1].date)])
+                .range([margin.left + 2 + (w / 2), chart.attr('width')-(w/2)]);
+            var yScale = d3.scale.linear()
+                .domain([0, (chartHeight-margin.top-margin.bottom)/rectScale])
+                .range([chartHeight - margin.bottom, margin.top]);
+
+            var xAxis = d3.svg.axis()
+                .scale(xScale)
+                .orient("bottom")
+                .ticks(21)
+                .tickFormat(d3.time.format("%d-%b"));
+            chart.append("g")
+                .attr('class', 'axis')
+                .attr('transform', 'translate(0,' + (chartHeight - margin.bottom) + ')')
+                .call(xAxis)
+                .selectAll("text")
+                .style("text-anchor", "end")
+                .attr("dx", "-.8em")
+                .attr("dy", ".15em")
+                .attr("transform", "rotate(-65)");
+            var yAxis = d3.svg.axis()
+                .scale(yScale)
+                .orient("left")
+                .ticks(10);
+            chart.append('g')
+                .attr('class', 'axis')
+                .attr('transform', 'translate(' + margin.left + ",0)")
+                .call(yAxis);
+            chart.select('#xlabel')
+                .style('text-anchor', 'center')
+                .attr('x', (chartScale - margin.left) / 2 + margin.left)
+                .attr('y', chartHeight - 10);
+            chart.select('#ylabel')
+                .style('text-anchor', 'center')
+                .attr('transform', 'translate(' + (margin.left /3) + ',' + ((chartHeight - margin.top - margin.bottom) / 2 + margin.top)+') rotate(-90)')
+
+            return (died);
+        });
+        d3.csv("data/deaths_age_sex.csv", function (data) {
+            console.log(data);
+            for (d = 0; d < died; d++) {
+                //console.log('you are here: ' + died);
+                if (Number(data[d].gender) == 1) {
+                    map.append('circle')
+                        .attr('cx', (data[d].x-xmin) * scale)
+                        .attr('cy', (data[d].y-ymin) * scale)
+                        .attr('r', '2')
+                        .attr('fill', 'red')
+                        .attr('class', 'female')
+                        .attr('id', d);
+                }
+                else {
+                    map.append('circle')
+                        .attr('cx', (data[d].x-xmin) * scale)
+                        .attr('cy', (data[d].y-ymin) * scale)
+                        .attr('r', '2')
+                        .attr('fill', 'red')
+                        .attr('class', 'male')
+                        .attr('id', d);
+                }
+            }
+        });
+
+        //click on bar graph picks the end date of the data display
+        console.log('new end date: ' + newEndDate);
+         
+        // if gender checkbox is checked, change the colors of the death circles
+        function update() {
+            //console.log('new end date: ' + newEndDate);
+            genderTemp = d3.select('#gender');
+            if (genderTemp.property("checked")) {
+                //console.log("checked");
+                map.selectAll(".male").attr('fill', 'blue');
+            }
+            else {
+                //console.log("unchecked");
+                map.selectAll(".male").attr('fill', 'red');
+            }
+            i = 0;
+            var newDeaths = 0;
+            //updates visibility of rectangles based on click
+            chart.selectAll('rect').each(function (d) {
+                if (d3.select(this).attr('id') <= newEndDate) {
+                    d3.select(this).attr("fill-opacity", "1");
+                    if (d3.select(this))
+                    newDeaths = newDeaths + (d3.select(this).attr("height")/2);
+                }
+                else {
+                    d3.select(this).attr("fill-opacity", ".4");
+                }
+            });
+            console.log('deaths:' + newDeaths);
+            //updates visibility of "deaths" based on date range
+            map.selectAll('circle').each(function (d) {
+                if (d3.select(this).attr('id') < newDeaths) {
+                    d3.select(this).attr("fill-opacity", "1");
+                }
+                else {
+                    d3.select(this).attr("fill-opacity", "0");
+                }
+            });
+        }
+        d3.select("#gender").on("change", update);
+
+        update();</script>
+
+</body>
+</html>
+

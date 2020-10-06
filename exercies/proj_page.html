@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <title></title>
+</head>
+<!--
+    color brewer (for color picking)
+For a C you need:
+
+X: A well drawn map of the area (streets and pumps) including the locations of the deaths
+   a timeline graph showing the number of deaths per day
+   ability to move the mouse over the timeline graph to choose which day to visualize - this should affect the deaths visible on the map and in the graph - at minimum all cholera deaths prior to that date should be shown on the map and the graph
+   the graph and the map should be stable (i.e., they should not move when new data is added or removed)
+   the graph and the map should be well labeled
+   you should check your visualization with a color blindness simulation tool to see that its OK
+   the map and graph should update quickly when the user interacts
+   an about screen with details on who wrote the project, where the data came from, etc.
+
+For a B you need to add:
+   more data to the map - major street names and the location of the brewery and the work house
+X: ability to easily see on the map whether each victim was male or female
+   ability to easily see on the map the age of each victim
+   additional graphs showing the distribution of deaths by sex and age overall
+
+For an A you need to add:
+   ability to cluster the data on the map into a grid that shows the number of dead in each grid cell (even with this small amount of data the points are starting to overwhelm) and the user should be able to vary the size of the clusters.
+   ability to show data from a window of days on the timeline graph
+   ability to zoom in/out and pan around the map
+-->
+<body>
+    <h1>Map</h1>
+    <div>
+        <input type="checkbox" class="checkbox" id="gender" value="gender" unchecked><label>Gender</label>
+        <input type="checkbox" class="checkbox" id="age" value="age" unchecked><label>Age</label>
+    </div>
+    <svg id="map" style="margin: 0 auto; display: block;"></svg>
+    <!--<input type="range" name="slider" id="dateSlider">-->
+    <svg id="chart" style="margin: 0 auto; display: block;"></svg>
+    <script type="text/javascript">const map = d3.select('#map');
+        const chart = d3.select('#chart');
+        var imgWidth = 1000;
+        var imgHeight = 700;
+        var chartHeight = imgHeight * .6;
+        var barPad = 2;
+        map.attr("height", imgHeight).attr("width", imgWidth);
+        chart.attr("height", chartHeight).attr("width", imgWidth);
+        var scale = 40.0;
+        d3.json("./datasets/streets.json", function (data) {
+            //console.log(data)
+            var a;
+            var b;
+            var l;
+            for (a = 0; a < data.length; a++) {
+                l = data[a];
+                for (b = 0; b < l.length - 1; b++) {
+                    map.append('line')
+                        .style('stroke', 'black')
+                        .style('stroke-width', '2')
+                        .attr('x1', l[b].x * scale)
+                        .attr('x2', l[b + 1].x * scale)
+                        .attr('y1', l[b].y * scale)
+                        .attr('y2', l[b + 1].y * scale);
+                    //console.log(l[b+1].x);
+                }
+            }
+        });
+        d3.csv("./datasets/pumps.csv", function (data) {
+            //console.log(data);
+            var i = 0;
+            for (i = 0; i < data.length; i++) {
+
+                map.append('circle')
+                    .attr('cx', data[i].x * scale)
+                    .attr('cy', data[i].y * scale)
+                    .attr('r', '5')
+                    .attr('fill', 'steelblue');
+            }
+        });
+        //slider to get ending date for showing the data
+
+        var endDate = 42;
+        var died = 0;
+
+        //need to get a number to tell how many of the deaths to show
+
+        d3.csv("./datasets/deathdays.csv", function (data) {
+            //console.log(data);
+            // For the slider attr: min="10" max="100" value="50";
+            var chartScale = imgWidth / data.length;
+            var w = chartScale - barPad;
+            var d = 0;
+            for (d = 0; d < endDate; d++) {
+                chart.append('rect')
+                    .attr('x', d * (w + barPad))
+                    .attr('y', (chartHeight - data[d].deaths))
+                    .attr('height', data[d].deaths)
+                    .attr('width', w)
+                    .attr('fill', 'steelblue');
+                console.log(chartHeight - data[d].deaths);
+                died = died + Number(data[d].deaths);
+            }
+            return (died);
+        });
+        d3.csv("./datasets/deaths_age_sex.csv", function (data) {
+            console.log(data);
+            for (d = 0; d < died; d++) {
+                //console.log('you are here: ' + died);
+                if (Number(data[d].gender) == 1) {
+                    map.append('circle')
+                        .attr('cx', data[d].x * scale)
+                        .attr('cy', data[d].y * scale)
+                        .attr('r', '2')
+                        .attr('fill', 'red')
+                        .attr('class', 'female');
+                }
+                else {
+                    map.append('circle')
+                        .attr('cx', data[d].x * scale)
+                        .attr('cy', data[d].y * scale)
+                        .attr('r', '2')
+                        .attr('fill', 'red')
+                        .attr('class', 'male');
+                }
+            }
+
+        });
+        // if gender checkbox is checked, change the colors of the death circles
+        function update() {
+            temp = d3.select('#gender');
+            if (temp.property("checked")) {
+                console.log("checked");
+                map.selectAll(".male").attr('fill', 'blue');
+            }
+            else {
+                console.log("unchecked");
+                map.selectAll(".male").attr('fill', 'red');
+            }
+        }
+        d3.select("#gender").on("change", update);
+        //d3.selectAll(“.male”).attr('fill', 'blue')
+
+        update();</script>
+<!--
+<script data-account="sE0Uu2k4v4" src="https://cdn.userway.org/widget.js"></script>
+-->
+</body>
+</html>
+

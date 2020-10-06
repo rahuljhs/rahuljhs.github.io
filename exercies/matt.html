@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://d3js.org/d3.v6.js"></script>
+</head>
+<body>
+
+<label for="deathByAge">Filter by Age</label>
+<select name="deathByAge" id="deathByAge" onchange="filterPumps()">>
+    <option value="-1">All</option>
+    <option value="0">0-10</option>
+    <option value="1">11-20</option>
+    <option value="2">21-40</option>
+    <option value="3">41-60</option>
+    <option value="4">61-80</option>
+    <option value="5">> 80</option>
+</select>
+
+<br>
+
+<label for="deathByGender">Filter by Gender</label>
+<select name="deathByGender" id="deathByGender" onchange="filterPumps()">
+    <option value="-1">All</option>
+    <option value="male">Male</option>
+    <option value="female">Female</option>
+</select>
+
+<br>
+
+<svg id="pump_map" style="margin: 0 auto; width: 625px; height: 580px; transform: scale(1,-1);"></svg>
+<svg id="timeline" style="margin:0 auto; width: 900px; height: 550px;"></svg>
+
+<script>
+    files = []
+    files.push(d3.json("./streets.json"));
+    files.push(d3.csv('pumps.csv'));
+    files.push(d3.csv('deathdays.csv'));
+    files.push(d3.csv('deaths_age_sex.csv'));
+    const AGE = 'age';
+    const MALE_COLOR = '#2d53b5';
+    const FEMALE_COLOR = '#e069ac';
+    const PUMP_COLOR = '#727575'
+    const GENDER = 'gender';
+    const ALL = '-1';
+    const SCALE = 35;
+    const Y_OFFSET = 95
+    const X_OFFSET = 95
+    const pumpSvg = d3.select('#pump_map');
+    const timelineSvg = d3.select('#timeline')
+
+    const makeAllVisibleByAge = () => {
+        d3.selectAll(`#pump_map .death.age-0, .death.age-1, .death.age-2, .death.age-3, `
+            + `circle.death.age-4, .death.age-5`)
+            .style("visibility", "visible");
+    }
+
+    const makeAllVisibleByGender = () => {
+        d3.selectAll(`#pump_map .death.male, .death.female`)
+            .style("visibility", "visible");
+    }
+
+    const filterPumps = (filterValue) => {
+        const genderVal = document.getElementById('deathByGender').value;
+        const ageVal = document.getElementById('deathByAge').value;
+        if (genderVal === ALL) {
+            makeAllVisibleByGender();
+            if(ageVal !== ALL) {
+                d3.selectAll(`#pump_map .death:not(.age-${ageVal})`)
+                    .style("visibility", "hidden");
+                d3.selectAll(`#pump_map .death:not(.age-${ageVal})`)
+                    .style("visibility", "hidden");
+            }
+        }
+        if (ageVal === ALL) {
+            makeAllVisibleByAge()
+            if (genderVal !== ALL) {
+                d3.selectAll(`#pump_map .death.${genderVal}`)
+                    .style("visibility", "visible");
+                d3.selectAll(`#pump_map .death:not(.${genderVal})`)
+                    .style("visibility", "hidden");
+            }
+        }
+
+        if (genderVal !== ALL && ageVal !== ALL) {
+            d3.selectAll(`#pump_map .death.age-${ageVal},.death.${genderVal}`)
+                .style("visibility", "visible");
+            d3.selectAll(`#pump_map .death:not(.age-${ageVal}),.death:not(.${genderVal})`)
+                .style("visibility", "hidden");
+        }
+
+    }
+
+    const createMap = (streets) => {
+        streets.forEach((seg) => {
+            lines = pumpSvg.append('path')
+                .attr("stroke", "black")
+                .attr("stroke-width", 1)
+                .attr("fill", "none")
+                .datum(seg)
+                .attr("d",
+                    d3.line()
+                        .x(function(d) { return d['x'] * SCALE - X_OFFSET})
+                        .y(function(d) { return d['y'] * SCALE - Y_OFFSET})
+                );
+        });
+    }
+
+    const addPumps = (pumps) => {
+        pumps.forEach((cords) => {
+            pumpSvg.append('circle')
+                .style("fill", PUMP_COLOR)
+                .attr("cx", cords['x'] * SCALE - X_OFFSET)
+                .attr("cy", cords['y'] * SCALE - Y_OFFSET)
+                .attr("r", 7)
+        })
+    }
+
+    const splitDeathsByDay = (deathByDays, totalDeaths) => {
+        // {date: Date, deaths: int, deathDetails: []}
+        let aggDeathData = [];
+        deathByDays.forEach((deathDay) => {
+            let deathsThisDay = deathDay['deaths'];
+            let deathDeets = [];
+            for(let i = 0; i < deathsThisDay; i++) {
+                deathDeets.push(totalDeaths.shift());
+            }
+            aggDeathData.push({date: deathDay['date'], deaths: deathDay['deaths'], deathDetails: deathDeets});
+        })
+        return aggDeathData;
+    }
+
+    const addDeathsToMap = (aggDeaths) => {
+
+        aggDeaths.forEach((deathDay) => {
+            pumpSvg.selectAll(`.death-${deathDay['date']}`)
+                .data(deathDay['deathDetails'])
+                .enter()
+                .append('path')
+                .style("fill", (d) => d['gender'] === '0' ? MALE_COLOR : FEMALE_COLOR)
+                .attr("class", (d) => {
+                    let deathGender = d['gender'] === '0' ? 'male' : 'female';
+                    return `death age-${d['age']} ${deathGender} ${deathDay['date']}`
+                })
+                .attr("d", (d) => {
+                    return d3.symbol().type(d3.symbols[parseInt(d['age'])]).size(35)()
+                })
+                // .attr("d", d3.symbol().type(d3.symbols[2]))
+                .attr("transform", function(d) {
+                    return `translate(${d['x'] * SCALE - X_OFFSET}, ${d['y'] * SCALE - Y_OFFSET})`;
+                })
+        })
+    }
+
+    const createTimeline = (aggDeaths) => {
+        const width = 750;
+        const height = 400;
+        const yBuffer = 25;
+        const xBuffer = 30;
+        const timeConv = d3.timeParse("%d-%b");
+
+        // SCALES
+        deaths = aggDeaths.map((d) => parseInt(d.deaths))
+        console.log(`DEATHS ${deaths} ${Math.max(...deaths)}`);
+        const xScale = d3.scaleTime()
+            .range([0, width])
+            .domain(d3.extent(aggDeaths, (d) => timeConv(d.date)));
+        const yScale = d3.scaleLinear()
+            .range([height, 0])
+            .domain([0, d3.max(aggDeaths, (d) => +d.deaths + yBuffer)]);
+
+        //-----------------------------AXES-----------------------------//
+        const yaxis = d3.axisLeft().scale(yScale)//.tickValues([Math.min(...deaths), Math.max(...deaths)]);
+        const xaxis = d3.axisBottom().scale(xScale).ticks(d3.timeDay.every(4)).tickFormat(d3.timeFormat('%d-%b')).tickPadding(10);
+
+        timelineSvg.append("g")
+            .attr("class", "axis")
+            .attr("transform", `translate(${xBuffer}, ${height})`)
+            .call(xaxis);
+
+        timelineSvg.append("g")
+            .attr("class", "axis")
+            .attr("transform", `translate(${xBuffer}, 0)`)
+            .call(yaxis)
+            .append("text")
+            .attr("transform", `rotate(-90)`)
+
+        //----------------------------LINES-----------------------------//
+        timelineSvg.selectAll('.death-timeline')
+            .data(aggDeaths)
+            .enter()
+            .append('rect')
+            .attr('class', 'death-timeline')
+            .attr('width', d => (width / aggDeaths.length) + 1)
+            .attr('height', height)
+            .attr('fill', 'blue')
+            .style('opacity', '0')
+            .attr("transform", d => `translate(${20 + xScale(timeConv(d.date))}, 0)`)
+            .on('mouseout', function() { // on mouse out hide line, circles and text
+                d3.selectAll(`.date-${d3.select(this).data()[0].date}`)
+                    .style("opacity", "0")
+                    .attr("transform", (d) => {
+                        console.log(d.date, d.deaths);
+                        return `translate(0,0)`
+                    })
+            })
+            .on('mouseover', function(event, datum) { // on mouse in show line, circles and text
+                const mouse = d3.pointer(event);
+                console.log(d3.select(`.date-${d3.select(this).data()[0].date}`));
+                console.log(d3.select(`.date-${d3.select(this).data()[0].date}`));
+
+                d3.selectAll(`.date-${d3.select(this).data()[0].date}`)
+                    .style("opacity", "1")
+                    .attr("transform", (d) => {
+                        console.log(d.date, d.deaths);
+                        return `translate(${xScale(timeConv(d.date))},${yScale(d.deaths)})`
+                    })
+                d3.selectAll(`text.date-${d3.select(this).data()[0].date}`)
+                    .style("opacity", "1")
+                    .attr("transform", (d) => {
+                        console.log(d.date, d.deaths);
+                        return `translate(${xScale(timeConv(d.date)) + 10},${yScale(d.deaths) - 5})`
+                    })
+
+            })
+
+        timelineSvg.append("path")
+            .datum(aggDeaths)
+            .attr("class", 'line')
+            .attr("stroke", "#129dbc")
+            .attr("fill", "none")
+            .attr("stroke-width", 1.5)
+            .attr("transform", `translate(${xBuffer}, 0)`)
+            .attr("d", d3.line()
+                .x((d) => {
+                    console.log(`DATE ${d.date}`);
+                    return xScale(timeConv(d.date));
+                })
+                .y((d) => {
+                    console.log(`DEATHS ${d.deaths}`);
+                    return yScale(parseInt(d.deaths));
+                })
+            );
+
+        const mouseG = timelineSvg.append("g")
+            .attr("class", "mouse-over-effects")
+            .attr("transform", `translate(${xBuffer}, 0)`);
+
+        // this is the vertical line
+        mouseG.append("path")
+            .attr("class", "mouse-line")
+            .style("stroke", "black")
+            .style("stroke-width", "1px")
+            .style("opacity", "0")
+
+        // here's a g for each circle and text on the line
+        const mousePerLine = mouseG.selectAll('.mouse-per-line')
+            .data(aggDeaths)
+            .enter()
+            .append("g")
+            .attr("class", "mouse-per-line")
+
+        // the circle
+        mousePerLine.append("circle")
+            .attr("r", 3)
+            .style("stroke", "#129dbc")
+            .style("fill", "#129dbc")
+            .style("stroke-width", "1px")
+            .attr('class', d => `date-${d.date}`)
+            .style("opacity", "0");
+
+        // the text
+        mousePerLine.append("text")
+            .attr('class', d => `date-${d.date}`)
+            .text(d => `Deaths: ${d.deaths}    Date: ${d.date}`)
+            .style('opacity', '0');
+    }
+
+    Promise.all(files).then((data) => {
+        createMap(data[0]);
+        addPumps(data[1]);
+        let aggDeaths = splitDeathsByDay(data[2], data[3]);
+        addDeathsToMap(aggDeaths);
+        createTimeline(aggDeaths);
+    });
+
+</script>
+</body>
+</html>

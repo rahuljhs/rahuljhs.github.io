@@ -3,33 +3,33 @@
   <head>
     <title>Rahul Yadav - Project 1</title>
     <style>
-            ul {
-                list-style-type: none;
-                position: fixed;
-                top: 0;
-                width: 100%;
-                margin: 0;
-                padding: 0;
-                overflow: hidden;
-                background-color: #333;
-            }
-            li {
-                display: inline;
-                float: left;
-            }
-            li a {
-                display: block;
-                color: white;
-                text-align: center;
-                padding: 14px 16px;
-                text-decoration: none;
-            }
-            li a:hover {
-                background-color: #111;
-            }
-            .active {
-                background-color: #4CAF50;
-            }
+            ul.header {
+                    list-style-type: none;
+                    position: fixed;
+                    top: 0;
+                    width: 100%;
+                    margin: 0;
+                    padding: 0;
+                    overflow: hidden;
+                    background-color: #333;
+                }
+            ul.header>li{
+                    display: inline;
+                    float: left;
+                }
+            ul.header>li a {
+                    display: block;
+                    color: white;
+                    text-align: center;
+                    padding: 14px 16px;
+                    text-decoration: none;
+                }
+            ul.header>li a:hover{
+                    background-color: #111;
+                }
+            ul.header>li>a.active {
+                    background-color: #4CAF50;
+                }
             .main_frame{
                 position: relative; 
                 text-align: center; 
@@ -38,11 +38,11 @@
     </style>
   </head>
   <body>
-    <ul>
+    <ul class="header">
         <li><a href="index.html">Visualisation</a></li>
         <li><a href="design_document.html">Design Document</a></li>
         <li><a class="active" href="video_walkthrough.html">Video Walkthrough</a></li>
-        <li style="float:right"><a href="https://khreda.com/teaching/2020/H517/project1/">H-517 PROJECT 1</a></li>
+        <li><a href="about.html">About</a></li>
     </ul>
     <br>
     <div id="contentframe" class="main_frame">

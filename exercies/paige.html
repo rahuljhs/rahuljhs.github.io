@@ -1,0 +1,707 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="https://d3js.org/d3-time.v2.min.js"></script>
+    <script src="https://d3js.org/d3-time-format.v3.min.js"></script>
+    <script>var transition = d3.transition();</script>
+    <title>Scott - Project 1</title>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
+    <meta name="description" content="Use this HTML basic website two columns liquid, side fixed layout template where the navigation menu and the extra stuff are on the left column, the main content on the right.">
+    <meta name="generator" content="HAPedit 3.1">
+    <link rel="canonical" href="https://www.w3docs.com/snippets/html/layout_templates/24.html" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="HTML FlexBox Template - Two columns liquid, side fixed, right content" />
+    <meta property="og:description" content="Use this HTML basic website two columns liquid, side fixed layout template where the navigation menu and the extra stuff are on the left column, the main content on the right." />
+    <meta property="og:image" content="https://www.w3docs.com/build/images/logo-amp.png" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="192" />
+    <meta property="og:image:height" content="192" />
+    <meta property="og:image:alt" content="W3dcos" />
+    <style type="text/css">
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            color: #292929;
+            font: 90% Roboto, Arial, sans-serif;
+            font-weight: 300;
+        }
+
+        p {
+            padding: 0 10px;
+            line-height: 1.8;
+        }
+
+        ul li {
+            padding-right: 10px;
+            line-height: 1.6;
+        }
+
+        h3 {
+            padding: 5px 20px;
+            margin: 0;
+        }
+
+        div#header {
+            position: relative;
+        }
+
+            div#header h1 {
+                height: 80px;
+                line-height: 80px;
+                margin: 0;
+                padding-left: 10px;
+                background: #e0e0e0;
+                color: #292929;
+            }
+
+            div#header a {
+                position: absolute;
+                right: 0;
+                top: 23px;
+                padding: 10px;
+                color: #006;
+            }
+
+        div#navigation {
+            background: #f1a340;
+        }
+
+            div#navigation li {
+                list-style: none;
+            }
+
+        div#extra {
+            background: #998ec3;
+        }
+
+        div#footer {
+            background: #42444e;
+            color: #fff;
+        }
+
+            div#footer p {
+                padding: 20px 10px;
+            }
+
+        div#wrapper {
+            float: right;
+            width: 100%;
+            margin-left: -300px;
+        }
+
+        div#content {
+            margin-left: 300px;
+            ;
+        }
+
+        div#navigation {
+            float: left;
+            width: 300px;
+        }
+
+        div#extra {
+            float: left;
+            clear: left;
+            width: 300px;
+        }
+
+        div#footer {
+            clear: both;
+            width: 100%;
+        }
+
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: black;
+            stroke-width: 2;
+            shape-rendering: crispEdges;
+        }
+
+        .axis text {
+            font-family: sans-serif;
+            font-size: 12px;
+        }
+    </style>
+    <title></title>
+</head>
+<!--
+    color brewer (for color picking)
+For a C you need:
+
+X: A well drawn map of the area (streets and pumps) including the locations of the deaths
+X: a timeline graph showing the number of deaths per day
+X: ability to move the mouse over the timeline graph to choose which day to visualize - this should affect the deaths visible on the map and in the graph - at minimum all cholera deaths prior to that date should be shown on the map and the graph
+X: the graph and the map should be stable (i.e., they should not move when new data is added or removed)
+X: the graph and the map should be well labeled
+X: you should check your visualization with a color blindness simulation tool to see that its OK
+X: the map and graph should update quickly when the user interacts
+   an about screen with details on who wrote the project, where the data came from, etc.
+
+For a B you need to add:
+X: more data to the map - major street names and the location of the brewery and the work house
+X: ability to easily see on the map whether each victim was male or female
+X: ability to easily see on the map the age of each victim
+X: additional graphs showing the distribution of deaths by sex and age overall
+
+For an A you need to add:
+   ability to cluster the data on the map into a grid that shows the number of dead in each grid cell (even with this small amount of data the points are starting to overwhelm) and the user should be able to vary the size of the clusters.
+   ability to show data from a window of days on the timeline graph
+X: ability to zoom in/out and pan around the map
+-->
+<body>
+    <div id="container">
+        <div id="header">
+            <h1>John Snow's Cholera Map: 2020</h1>
+            <a href="/download/template/24" target="_blank">download this layout</a>
+        </div>
+        <div id="wrapper">
+            <div id="content">
+                <h3>History </h3>
+                <p>
+                    Dr. John Snow's visualization of the deaths realated to the Broad Street Cholera outbreak of 1854 provided some of the most compelling
+                    evidence and made the case for public health policies to improve water sanitation. The map below is an interactive recreation of the original
+                    visualization created by Dr. Snow. It can be filtered by date and show the distribuition of deaths for each gender and age range.
+                </p>
+                <svg id="map" style="border: 1px solid black;transform: scale(1,-1); margin: 0 auto; display: inline-flex;">
+                    <text>Brewery</text>
+                </svg>
+                <svg id="chart" style="border: 1px solid black; margin: 0 auto; display: inline-flex;">
+                    <text id="xlabel">Date</text>
+                    <text id="ylabel">Deaths</text>
+                    <text id="mainlabel">Deaths per Day</text>
+                </svg>
+                <p>
+                    Flexbox is relatively new, but it enjoys excellent browser support today (nearly 83% of browsers support
+                    Flexbox). Flexbox Layout is used for small application components, whereas CSS Grid Layout Module is
+                    aimed to handle the large scale layouts.
+                </p>
+                <h3>The Two axes of Flexbox</h3>
+                <p>
+                    When working with flexbox you need to think in terms of two axes â the main axis and the cross axis. The
+                    main axis is defined by the flex-direction property, and the cross axis runs perpendicular to it.
+                    Everything we do with flexbox refers back to these axes, so it is worth understanding how they work from
+                    the outset.
+                </p>
+            </div>
+        </div>
+        <div id="navigation">
+            <p><strong><input type="checkbox" class="checkbox" id="gender" value="gender" unchecked><label>Display Gender on Map</label></strong></p>
+            <h3>Gender Distribution</h3>
+            <svg id="genderchart" height="400" width="260" style="background-color: white; border: 1px solid black; margin: 20 20; display: inline-flex;">
+                <text id="ylabel">Deaths</text>
+                <text id="malelabel">Male</text>
+                <text id="femalelabel">Female</text>
+            </svg>
+        </div>
+        <div id="extra">
+            <p><strong><input type="checkbox" class="checkbox" id="age" value="age" unchecked><label>Display Age on Map</label></strong></p>
+            <h3>Age Distribution (ranges in years)</h3>
+            <svg id="agechart" height="450" width="260" style="background-color: white; border: 1px solid black; margin: 20 20; display: inline-flex;">
+                <text id="ylabel">Deaths</text>
+
+            </svg>
+        </div>
+        <div id="footer">
+            <p>Footer</p>
+        </div>
+    </div>
+    <script type="text/javascript">AddFillerLink("content", "navigation", "extra")</script>
+    <h1>Map</h1>
+    
+    <!--<input type="range" name="slider" id="dateSlider">-->
+    
+    <script type="text/javascript">
+        const map = d3.select('#map')
+            .attr('height', '620')
+            .attr('width', '661')
+            .call(
+                d3.behavior.zoom()
+                    .scaleExtent([1, 10])
+                    .on("zoom", zoom)
+            )
+            .append('g');
+        const chart = d3.select('#chart');
+        const gchart = d3.select('#genderchart');
+        const achart = d3.select('#agechart');
+        var allDeaths;
+        var imgWidth = 1000;
+        var imgHeight = 750;
+        var chartHeight = imgHeight * .5;
+        var rectScale = 3;
+        var barPad = 2;
+        var xmin = 10;
+        var xmax = 0;
+        var ymin = 10;
+        var ymax = 0;
+        var w = 0;
+        //set up colors
+        var blues = ["#eff3ff", "#c6dbef", "#9ecae1", "#6baed6", "#3182bd", "#08519c"];
+        var reds = ["#fee5d9", "#fcbba1", "#fc9272", "#fb6a4a", "#de2d26", "#a50f15"];
+        var ageColor = ["#b35806", "#f1a340", "#fee0b6", "#d8daeb", "#998ec3", "#542788"];
+        //
+        map.attr("height", imgHeight).attr("width", imgWidth);
+        chart.attr("height", chartHeight).attr("width", imgWidth);
+
+        var margin = { top: 40, right: 20, bottom: 70, left: 60 };
+        var gendermargin = { top: 30, right: 10, bottom: 80, left: 30 };
+        var agemargin = { top: 30, right: 10, bottom: 80, left: 50 };
+        var maleTotal = 0;
+        var femaleTotal = 0;
+        var genderScale = 1.1;
+        var grectpad = 40;
+        var gmax = 300;
+        var ageCounts = [0, 0, 0, 0, 0, 0];
+        var ageLabels = ["0-10", "11-20", "21-40", "41-60", "61-80", ">80"];
+        var agescale = 1;
+
+        var scale = 40.0;
+        d3.json("data/streets.json", function (data) {
+            //console.log(data)
+            var a;
+            var b;
+            var l;
+            //find x,y min & max
+            for (a = 0; a < data.length; a++) {
+                l = data[a];
+                for (b = 0; b < l.length; b++) {
+                    if (l[b].x > xmax) {
+                        xmax = l[b].x;
+                    }
+                    if (l[b].x < xmin) {
+                        xmin = l[b].x;
+                    }
+                    if (l[b].y > ymax) {
+                        ymax = l[b].y;
+                    }
+                    if (l[b].y < ymin) {
+                        ymin = l[b].y;
+                    }
+                }
+            }
+            console.log("xmin:" + xmin + "xmax: " + xmax + "ymin: " + ymin + "ymax: " + ymax);
+            map.attr('width', (xmax - xmin) * scale).attr('height', (ymax - ymin) * scale);
+            console.log("map ht: " + map.attr('height') + "Map w: " + map.attr('width'));
+            for (a = 0; a < data.length; a++) {
+                l = data[a];
+                for (b = 0; b < l.length - 1; b++) {
+                    map.append('line')
+                        .style('stroke', 'black')
+                        .style('stroke-width', '2')
+                        .attr('x1', (l[b].x - xmin) * scale)
+                        .attr('x2', (l[b + 1].x - xmin) * scale)
+                        .attr('y1', (l[b].y - ymin) * scale)
+                        .attr('y2', (l[b + 1].y - ymin) * scale);;
+                }
+            }
+            map.append('text')
+                .text('Brewery')
+                .style('font-size', '10px')
+                .attr('transform', 'translate(' + 10.2 * scale + ',' + 9 * scale + ') rotate(-60) scale (1, -1)');
+            map.append('rect')
+                .attr('x', '0')//7 * scale
+                .attr('y', '0')//10 * scale
+                .attr('stroke', 'black')
+                .attr('stroke-width', '1.5px')
+                .attr('height', '40')
+                .attr('width', '60')
+                .attr('fill', 'white')
+                .attr('transform', 'translate(' + 6.8 * scale + ',' + 9.7 * scale + ') rotate(27 20 30)');
+            map.append('text')
+                .text('Work House')
+                .style('font-size', '10px')
+                .attr('transform', 'translate(' + 7 * scale + ',' + 10 * scale + ') rotate(27) scale (1, -1)');
+            map.append('text')
+                .text('Broad Street')
+                .style('font-size', '10px')
+                .attr('transform', 'translate(' + 8.5 * scale + ',' + 8.3 * scale + ') rotate(27) scale (1, -1)');
+            map.append('text')
+                .text('Oxford Street')
+                .style('font-size', '10px')
+                .attr('transform', 'translate(' + 7 * scale + ',' + 13.4* scale + ') rotate(12) scale (1, -1)');
+                
+        });
+        d3.csv("data/pumps.csv", function (data) {
+            //console.log(data);
+            var i = 0;
+            for (i = 0; i < data.length; i++) {
+
+                map.append('circle')
+                    .attr('cx', (data[i].x - xmin) * scale)
+                    .attr('cy', (data[i].y - ymin) * scale)
+                    .attr('r', '5')
+                    .attr('fill', 'steelblue')
+                    .attr('stroke', 'white')
+                    .attr('stroke-width', '1.5px');
+            }
+        });
+
+        var endDate = 42;
+        var newEndDate = 42;
+        var died = 0;
+        var days = 0;
+        console.log("end date: " + endDate);
+        //need to get a number to tell how many of the deaths to show
+
+        d3.csv("data/deathdays.csv", function (data) {
+            console.log(data);
+            var chartScale = (xmax * scale + 10);
+            chartHeight = map.attr('height');
+            chart.attr('width', chartScale + margin.left).attr('height', chartHeight);
+            console.log("chartscale: " + chartScale);
+            w = chartScale / data.length - barPad;
+            console.log("w: " + w);
+
+            var hmax = 0;
+            var x = 0;
+            days = data.length;
+            for (x = 0; x < days; x++) {
+                if (data[x].deaths == 0) {
+                    chart.append('line')
+                        .attr('x1', margin.left + x * (w + barPad) + 2)
+                        .attr('x2', margin.left + x * (w + barPad) + 2 + w)
+                        .attr('y1', (chartHeight - data[x].deaths * rectScale - margin.bottom))
+                        .attr('y2', (chartHeight - data[x].deaths * rectScale - margin.bottom))
+                        .style('stroke', 'black')
+                        .style('stroke-width', '1')
+                        .on('mouseover', function () {
+                            d3.select(this).attr('stroke', 'orange')
+                        })
+                        .on('mouseout', function () {
+                            d3.select(this).attr('stroke', 'black')
+                        });
+                }
+                else {
+                    chart.append('rect')
+                        .attr('x', margin.left + x * (w + barPad) + 2)
+                        .attr('y', (chartHeight - data[x].deaths * rectScale - margin.bottom))
+                        .attr('height', data[x].deaths * rectScale)
+                        .attr('width', w)
+                        .attr('fill', 'steelblue')
+                        .attr('class', 'dead')
+                        .attr("fill-opacity", "1")
+                        .attr('id', x)
+                        .attr('title', data[x].date)
+                        .on('mouseover', function () {
+                            d3.select(this).attr('fill', 'orange')
+                        })
+                        .on('mouseout', function () {
+                            d3.select(this).attr('fill', 'steelblue')
+                        })
+                        .on('click', function (d, i) {
+                            console.log('id: ' + d3.select(this).attr('id'));
+                            //click on bar graph picks the end date of the data display
+                            newEndDate = Number(d3.select(this).attr('id'));
+                            update();
+                            //d3.select('.date').text('Showing Data from Start to')
+                        });
+                    if (Number(data[x].deaths) > hmax) {
+                        hmax = Number(data[x].deaths);
+                    }
+                }
+                died = died + Number(data[x].deaths);
+            }
+
+            //Add scales to the bar chart
+            var timeFormat = d3.time.format('%d-%b');
+            //console.log("start date: " + timeFormat.parse(data[1].date));
+            var xScale = d3.time.scale()
+                .domain([timeFormat.parse(data[0].date), timeFormat.parse(data[data.length - 1].date)])
+                .range([margin.left + 2 + (w / 2), chart.attr('width') - (w / 2)]);
+            var yScale = d3.scale.linear()
+                .domain([0, (chartHeight - margin.top - margin.bottom) / rectScale])
+                .range([chartHeight - margin.bottom, margin.top]);
+
+            var xAxis = d3.svg.axis()
+                .scale(xScale)
+                .orient("bottom")
+                .ticks(21)
+                .tickFormat(d3.time.format("%d-%b"));
+            chart.append("g")
+                .attr('class', 'axis')
+                .attr('transform', 'translate(0,' + (chartHeight - margin.bottom) + ')')
+                .call(xAxis)
+                .selectAll("text")
+                .style("text-anchor", "end")
+                .attr("dx", "-.8em")
+                .attr("dy", ".15em")
+                .attr("transform", "rotate(-65)");
+            var yAxis = d3.svg.axis()
+                .scale(yScale)
+                .orient("left")
+                .ticks(10);
+            chart.append('g')
+                .attr('class', 'axis')
+                .attr('transform', 'translate(' + margin.left + ",0)")
+                .call(yAxis);
+            chart.select('#xlabel')
+                .style('text-anchor', 'center')
+                .attr('x', (chartScale - margin.left) / 2 + margin.left)
+                .attr('y', chartHeight - 10);
+            chart.select('#ylabel')
+                .style('text-anchor', 'center')
+                .attr('transform', 'translate(' + (margin.left / 3) + ',' + ((chartHeight - margin.top - margin.bottom) / 2 + margin.top) + ') rotate(-90)');
+            chart.select('#mainlabel')
+                .attr('x', chart.attr('width')/2)
+                .attr('y', 30)
+                .style('font-size', "20px")
+                .style('text-anchor', 'middle');
+
+            return (died);
+        });
+
+        d3.csv("data/deaths_age_sex.csv", function (data) {
+            allDeaths = data;
+            var defclass = "";
+            for (d = 0; d < died; d++) {
+                //console.log('you are here: ' + died);
+                if (Number(data[d].gender) == 1) {
+                    defclass = "death female age" + data[d].age;
+                    console.log(defclass)
+                    femaleTotal = femaleTotal + 1;
+                    map.append('circle')
+                        .attr('cx', (data[d].x - xmin) * scale)
+                        .attr('cy', (data[d].y - ymin) * scale)
+                        .attr('r', '3')
+                        .attr('fill', ageColor[1])
+                        .attr('class', defclass)
+                        .attr('id', d);
+                    ageCounts[Number(data[d].age)]++;
+                }
+                else {
+                    defclass = "death male age" + data[d].age;
+                    console.log(defclass)
+                    maleTotal = maleTotal + 1;
+                    map.append('circle')
+                        .attr('cx', (data[d].x - xmin) * scale)
+                        .attr('cy', (data[d].y - ymin) * scale)
+                        .attr('r', '3')
+                        .attr('fill', ageColor[1])
+                        .attr('class', defclass)
+                        .attr('id', d);
+                    ageCounts[Number(data[d].age)]++;
+                }
+            }
+            console.log("ages: " + ageCounts);
+            console.log('males: ' + maleTotal + " females: " + femaleTotal);
+            w = (gchart.attr('width') - grectpad * 3 - gendermargin.left) / 2;
+            //add the chart for gender, icon indicators & labels
+            gchart.append('rect')
+                .attr('x', gendermargin.left + grectpad)
+                .attr('y', gendermargin.top + (gmax - maleTotal) * genderScale)
+                .attr('width', w)
+                .attr('height', maleTotal * genderScale)
+                .attr('fill', ageColor[1])
+                .attr('id', 'malerect');
+            gchart.append('circle')
+                .attr('cx', gendermargin.left + grectpad + w / 2)
+                .attr('cy', gendermargin.top + (gmax - maleTotal) * genderScale - 15)
+                .attr('r', '10')
+                .attr('stroke', ageColor[1])
+                .attr('fill', 'none')
+                .attr('stroke-width', '2')
+                .attr('id', 'malecir');
+            gchart.select('#malelabel')
+                .attr('x', gendermargin.left + grectpad + w / 2)
+                .attr('y', gendermargin.top + gmax * genderScale + 15)
+                .style('text-anchor', 'middle')
+                .text('Male: ' + maleTotal);
+            gchart.append('rect')
+                .attr('x', gendermargin.left + grectpad + w + grectpad)
+                .attr('y', gendermargin.top + (gmax - femaleTotal) * genderScale)
+                .attr('width', w)
+                .attr('height', femaleTotal * genderScale)
+                .attr('fill', ageColor[1])
+                .attr('id', 'femalerect');
+            gchart.append('circle')
+                .attr('cx', gendermargin.left + grectpad + w + grectpad + w / 2)
+                .attr('cy', gendermargin.top + (gmax - femaleTotal) * genderScale - 15)
+                .attr('r', '10')
+                .attr('fill', ageColor[1])
+                .attr('id', 'femalecir');
+            gchart.select('#femalelabel')
+                .attr('x', gendermargin.left + grectpad + w + grectpad + w / 2)
+                .attr('y', gendermargin.top + gmax * genderScale + 15)
+                .style('text-anchor', 'middle')
+                .text('Female: ' + femaleTotal);
+            gchart.select('#ylabel')
+                .style('text-anchor', 'center')
+                .attr('transform', 'translate(' + (gendermargin.left / 2) + ',' + gchart.attr('height') / 2 + ') rotate(-90)');
+            var genyScale = d3.scale.linear()
+                .domain([0, gmax])
+                .range([gmax * genderScale + gendermargin.top, gendermargin.top]);
+
+            var genyAxis = d3.svg.axis()
+                .scale(genyScale)
+                .orient("left")
+                .ticks(15);
+            gchart.append('g')
+                .attr('class', 'axis')
+                .attr('transform', 'translate(' + margin.left + ",0)")
+                .call(genyAxis);
+            //create ages chart
+            var agepad = 10;
+            var h = (achart.attr('height') - agemargin.top - agemargin.bottom - agepad * 5) / 6;
+            
+
+            for (d = 0; d < ageCounts.length; d++) {
+                achart.append('rect')
+                    .attr('x', agemargin.left)
+                    .attr('y', agemargin.top + d * (h + agepad))
+                    .attr('height', h)
+                    .attr('width', ageCounts[d] * agescale)
+                    .attr('fill', ageColor[d]);
+                console.log("num: " + ageCounts[d] + "color: " + ageColor[d]);
+                achart.append('text')
+                    .text(ageCounts[d])
+                    .attr('text-anchor', 'middle')
+                    .attr('x', agemargin.left + ageCounts[d] * agescale + 20)
+                    .attr('y', agemargin.top + d * (h + agepad) + h / 2)
+                    .attr('id', 'agelabel');
+            }
+            var ageyScale = d3.scale.ordinal()
+                .domain(ageLabels)
+                .rangePoints([agemargin.top + h/2, agemargin.top + h*6 + agepad * 5 - h/2]);
+
+            var ageyAxis = d3.svg.axis()
+                .scale(ageyScale)
+                .orient("left")
+                .tickValues(ageLabels);
+            achart.append('g')
+                .attr('class', 'axis')
+                .attr('transform', 'translate(' + agemargin.left + ",0)")
+                .call(ageyAxis);
+        });
+
+        
+
+        //click on bar graph picks the end date of the data display
+        console.log('new end date: ' + newEndDate);
+
+        // if gender checkbox is checked, change the colors of the death circles
+        function update() {
+            //console.log('new end date: ' + newEndDate);
+            genderTemp = d3.select('#gender');
+            ageTemp = d3.select('#age');
+            if (genderTemp.property("checked")) {
+                //console.log("checked");
+                if (ageTemp.property("checked")) {
+                    console.log("age & gender")
+                    map.selectAll("death").attr('stroke-width', '1');
+                    map.selectAll(".age0").attr('fill', ageColor[0]).attr('stroke', ageColor[0]);
+                    map.selectAll(".age1").attr('fill', ageColor[1]).attr('stroke', ageColor[1]);
+                    map.selectAll(".age2").attr('fill', ageColor[2]).attr('stroke', ageColor[2]);
+                    map.selectAll(".age3").attr('fill', ageColor[3]).attr('stroke', ageColor[3]);
+                    map.selectAll(".age4").attr('fill', ageColor[4]).attr('stroke', ageColor[4]);
+                    map.selectAll(".age5").attr('fill', ageColor[5]).attr('stroke', ageColor[5]);
+                    map.selectAll(".male").attr('fill', 'none').attr('stroke-opacity', '1');
+                    map.selectAll(".female").attr('stroke-opacity', '0');
+                }
+                else {
+                    console.log("gender only");
+                    map.selectAll(".male").attr('fill', 'none').attr('stroke', ageColor[1]).attr('stroke-opacity', '1');
+                    map.selectAll(".female").attr('fill', ageColor[1]).attr('stroke-opacity', '0');
+                }
+            }
+            else {
+                //console.log("unchecked");
+                if (ageTemp.property("checked")) {
+                    console.log("age only");
+                    map.selectAll(".age0").attr('fill', ageColor[0]);
+                    map.selectAll(".age1").attr('fill', ageColor[1]);
+                    map.selectAll(".age2").attr('fill', ageColor[2]);
+                    map.selectAll(".age3").attr('fill', ageColor[3]);
+                    map.selectAll(".age4").attr('fill', ageColor[4]);
+                    map.selectAll(".age5").attr('fill', ageColor[5]);
+                    map.selectAll(".male").attr('stroke-opacity', "0");
+                }
+                else {
+                    console.log("neither");
+                    map.selectAll(".male").attr('fill', ageColor[1]).attr('stroke-opacity', "0");
+                    map.selectAll(".female").attr('fill', ageColor[1]);
+                }
+
+            }
+            //updage based on age checkbox:
+            i = 0;
+            var newDeaths = 0;
+            //updates visibility of rectangles based on click
+            chart.selectAll('rect').each(function (d) {
+                if (d3.select(this).attr('id') <= newEndDate) {
+                    d3.select(this).attr("fill-opacity", "1");
+                    if (d3.select(this))
+                        newDeaths = newDeaths + (d3.select(this).attr("height") / rectScale);
+                }
+                else {
+                    d3.select(this).attr("fill-opacity", ".4");
+                }
+            });
+            console.log('deaths:' + newDeaths);
+            //updates visibility of "deaths" based on date range
+            var maleTemp = 0;
+            var femaleTemp = 0;
+            var ageTemp = [0, 0, 0, 0, 0, 0];
+            for (i = 0; i < newDeaths; i++) {
+                if (allDeaths[i].gender == 0) {
+                    maleTemp = maleTemp + 1;
+                    ageTemp[Number(allDeaths[i].age)]++;
+                }
+                else {
+                    femaleTemp = femaleTemp + 1;
+                    ageTemp[Number(allDeaths[i].age)]++;
+                }
+            }
+            //update gender chart
+            gchart.select('#femalerect')
+                .attr('y', gendermargin.top + (gmax - femaleTemp) * genderScale)
+                .attr('height', femaleTemp * genderScale);
+            gchart.select('#malerect')
+                .attr('y', gendermargin.top + (gmax - maleTemp) * genderScale)
+                .attr('height', maleTemp * genderScale);
+            gchart.select('#malecir')
+                .attr('cy', gendermargin.top + (gmax - maleTemp) * genderScale - 15);
+            gchart.select('#femalecir')
+                .attr('cy', gendermargin.top + (gmax - femaleTemp) * genderScale - 15);
+            gchart.select('#femalelabel').text('Female: ' + femaleTemp);
+            gchart.select('#malelabel').text('Male: ' + maleTemp);
+
+            //update age chart
+            console.log("age temp:", ageTemp);
+            achart.selectAll('rect')
+                .attr('width', function (d, i) {
+                    return ageTemp[i] * agescale;
+                });
+            achart.selectAll('#agelabel')
+                .attr('x', function (d, i) {
+                    return agemargin.left + ageTemp[i] * agescale + 20;
+                })
+                .text(function (d, i) {
+                    return ageTemp[i];
+                });
+            //update visibility of deaths
+            map.selectAll('circle').each(function (d) {
+                if (d3.select(this).attr('id') < newDeaths) {
+                    d3.select(this).attr("fill-opacity", "1");
+                }
+                else {
+                    d3.select(this).attr("fill-opacity", "0").attr('stroke-opacity', '0');
+                }
+            });
+        }
+
+        function zoom() {
+            map.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+        }
+
+        d3.select("#gender").on("change", update);
+        d3.select("#age").on("change", update);
+        update();</script>
+
+</body>
+</html>
