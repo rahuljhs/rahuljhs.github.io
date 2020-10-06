@@ -316,7 +316,7 @@
             map_legend.append("text")
             .attr("y", 25)
             .attr("x", 15)
-            .text("Map Legend : ")
+            .text("Street Map Legend : ")
 
             map_legend.append('circle')
             .style("fill", 'grey')
@@ -329,29 +329,94 @@
             .attr("x", 30)
             .text("Pumps")
 
-            map_legend.append('rect')
+            map_legend.append('circle')
             .style("fill", 'green')
-            .attr("x", 15)
-            .attr("y", 55)
-            .attr("height", 10)
-            .attr("width", 10)
+            .attr("cx", 20)
+            .attr("cy", 60)
+            .attr("r", 7)
+            
 
             map_legend.append("text")
             .attr("y", 65)
             .attr("x", 30)
-            .text("Female (color)")
+            .text("Female")
 
-            map_legend.append('rect')
+            map_legend.append('circle')
             .style("fill", 'red')
-            .attr("x", 15)
-            .attr("y", 75)
-            .attr("height", 10)
-            .attr("width", 10)
-
+            .attr("cx", 20)
+            .attr("cy", 80)
+            .attr("r", 7)
+            
             map_legend.append("text")
             .attr("y", 85)
             .attr("x", 30)
-            .text("Male (color)")
+            .text("Male")
+
+            map_legend.append('circle')
+            .style("fill", ageColor[0])
+            .attr("cx", 180)
+            .attr("cy", 40)
+            .attr("r", 7)
+
+            map_legend.append("text")
+            .attr("y", 45)
+            .attr("x", 195)
+            .text("Age : 0-10")
+
+            map_legend.append('circle')
+            .style("fill", ageColor[1])
+            .attr("cx", 180)
+            .attr("cy", 60)
+            .attr("r", 7)
+
+            map_legend.append("text")
+            .attr("y", 65)
+            .attr("x", 195)
+            .text("Age : 11-20")
+
+            map_legend.append('circle')
+            .style("fill", ageColor[2])
+            .attr("cx", 180)
+            .attr("cy", 80)
+            .attr("r", 7)
+
+            map_legend.append("text")
+            .attr("y", 85)
+            .attr("x", 195)
+            .text("Age : 21-40")
+
+            map_legend.append('circle')
+            .style("fill", ageColor[3])
+            .attr("cx", 310)
+            .attr("cy", 40)
+            .attr("r", 7)
+
+            map_legend.append("text")
+            .attr("y", 45)
+            .attr("x", 325)
+            .text("Age : 41-60")
+
+            map_legend.append('circle')
+            .style("fill", ageColor[4])
+            .attr("cx", 310)
+            .attr("cy", 60)
+            .attr("r", 7)
+
+            map_legend.append("text")
+            .attr("y", 65)
+            .attr("x", 325)
+            .text("Age : 61-80")
+
+            map_legend.append('circle')
+            .style("fill", ageColor[5])
+            .attr("cx", 310)
+            .attr("cy", 80)
+            .attr("r", 7)
+
+            map_legend.append("text")
+            .attr("y", 85)
+            .attr("x", 325)
+            .text("Age : >80")
     }
     var died = 0;
 
