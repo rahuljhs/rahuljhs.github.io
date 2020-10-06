@@ -46,15 +46,22 @@
                 display:flex;
                 flex-direction:row;
         }
-       
-        .display_row_1>.deaths_by_age{
+
+        .display_row_1>.checkbox_text{
             margin-top: 35px; 
             margin-left: 20px;
             display:flex;
             flex-direction:column;
         }
+       
+        .display_row_1>.deaths_by_age{
+            margin-top: 45px; 
+            margin-left: 20px;
+            display:flex;
+            flex-direction:column;
+        }
         .display_row_1>.deaths_by_gender{
-            margin-top: 35px; 
+            margin-top: 45px; 
             margin-left: 20px;
             display:flex;
             flex-direction:column;
@@ -121,42 +128,18 @@
         <div class="map_legend_svg">
             <svg id="map_legend" ></svg>
         </div>
-
-        <div class="deaths_by_age">
-            
-            <input type="checkbox" class="checkbox" id="deaths_by_age" value="age" unchecked><label>Display Age Distribution on Map</label>
-            <!--
-            <label for="deaths_by_age">Filter by Age</label>
-            <select name="deaths_by_age" id="deaths_by_age" onchange="filterPumps()">
-                <option value="-1">All</option>
-                <option value="0">0-10</option>
-                <option value="1">11-20</option>
-                <option value="2">21-40</option>
-                <option value="3">41-60</option>
-                <option value="4">61-80</option>
-                <option value="5">> 80</option>
-            </select>
-        -->
+        <div class="checkbox_text">
+            <p>Display Deaths on Street Map: </p>
+        </div>
+        
+        <div class="deaths_by_age">  
+            <input type="checkbox" class="checkbox" id="deaths_by_age" onchange="update()" value="age" unchecked><label>By Age Distribution</label>
         </div>
 
         <div class="deaths_by_gender">
-            <input type="checkbox" class="checkbox" id="deaths_by_gender" value="gender" unchecked><label>Display Gender Distribution on Map</label>
-            <!--
-            <label for="deaths_by_gender">Filter by Gender</label>
-            <select name="deaths_by_gender" id="deaths_by_gender" onchange="filterPumps()" >
-                <option value="-1">All</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-            </select>
-        -->
+            <input type="checkbox" class="checkbox" id="deaths_by_gender" onchange="update()" value="gender" checked><label>By Gender Distribution</label>
         </div>
-            <!--
-            <div id = "information">
-                <br>
-                <p style="margin:0;">Hover over <strong>Deaths Per Day</strong> to filter by day</p>
-                <p style="margin:0;">Scroll or click/drag to move around the map</p>
-            </div>
-            -->
+
     </div>
     <div class ="display_row_2">
         <div class="map_svg">
