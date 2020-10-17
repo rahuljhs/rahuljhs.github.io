@@ -570,7 +570,7 @@
                 .attr('x', 100)
                 .attr('y', 47.5)
                 .attr('width', gender_bar_width)
-                .attr('height', male_counter)
+                .attr('height', male_counter*1.1)
                 .attr('fill', 'red')
                 .attr('id', 'malerect');
             // Male Label
@@ -585,7 +585,7 @@
                 .attr('x', 170)
                 .attr('y', 44.3)
                 .attr('width', gender_bar_width)
-                .attr('height', female_counter)
+                .attr('height', female_counter*1.1)
                 .attr('fill', 'green')
                 .attr('id', 'femalerect');
 
@@ -789,15 +789,11 @@
 
             // Update Gender Graph Plot
             gender_graph.select('#femalerect')
-                .attr('y', gender_margin.top + (300 - femaleTemp) )
-                .attr('height', femaleTemp);
+                .attr('y', gender_margin.top + (300 - femaleTemp)*1.1 )
+                .attr('height', femaleTemp*1.1 );
             gender_graph.select('#malerect')
-                .attr('y', gender_margin.top + (300 - maleTemp) )
-                .attr('height', maleTemp);
-            gender_graph.select('#malecir')
-                .attr('cy', gender_margin.top + (300 - maleTemp) - 15);
-            gender_graph.select('#femalecir')
-                .attr('cy', gender_margin.top + (300 - femaleTemp) - 15);
+                .attr('y', gender_margin.top + (300 - maleTemp)*1.1 )
+                .attr('height', maleTemp*1.1);
             gender_graph.select('#femalelabel').text('Female: ' + femaleTemp);
             gender_graph.select('#malelabel').text('Male: ' + maleTemp);
 
