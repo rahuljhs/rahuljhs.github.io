@@ -1,22 +1,24 @@
 const scatterPlotHeight = 400;
 const scatterPlotWidth = 400;
+const color = ['#d73027', '#fc8d59', '#fee090', '#e0f3f8', '#91bfdb', '#4575b4'];
 
-var margin = { top: 20, bottom: 40, left: 50, right: 20 };
+var margin = { top: 40, bottom: 40, left: 50, right: 20 };
 
 var plotht = scatterPlotHeight - margin.top - margin.bottom;
 var plotwt = scatterPlotWidth - margin.left - margin.right;
 
-const splot = d3version6.select('#scatter-plot');
+    const splot = d3version6.select('#scatter-plot');
+
+const opacityOn = 1;
+const opacityOff = .5;
 
 
 // The color is just there to make sure code is working.  Feel Free to delete when working in this file!
 const createScatterPlot = () => {
     var year = document.getElementById("year").value; //this will need to be updated by the filter input: Year
-    console.log(year);
     var attr1 = document.getElementById("attribute1").value; //this will need to be updated by the filter input: Attribute 1
-    console.log(attr1);
     var attr2 = document.getElementById("attribute2").value; //this will need to be updated by the filter input: Attribute 2
-    console.log(attr2);
+    var reg = document.getElementById("region").value; 
 
     d3version6.select('#scatter-plot')
         .style('width', `${scatterPlotWidth}px`)
@@ -43,11 +45,11 @@ const createScatterPlot = () => {
         .style('stroke-width', '1');
 
     //get min & max of x & y values
-    var xmin = 100; //attr 1
-    var xmax = 0; //attr 1
-    var ymin = 100; //attr 2
-    var ymax = 0; //attr 2
-    for (x = 0; x < dataHash[year].length; x++) {
+    let xmin = 100; //attr 1
+    let xmax = 0; //attr 1
+    let ymin = 100; //attr 2
+    let ymax = 0; //attr 2
+    for (let x = 0; x < dataHash[year].length; x++) {
         if (dataHash[year][x][attr1] > xmax) {
             xmax = dataHash[year][x][attr1];
         }
@@ -62,39 +64,49 @@ const createScatterPlot = () => {
         }
     }
 
-    //define div for tooltip: example code used: https://bl.ocks.org/d3noob/a22c42db65eb00d4e369
-    var div = d3version6.select("body").append("div")
-        .attr("class", "tooltip")
-        .style("opacity", 0);
-
     //set whole number scales
     //figure out the scale of x & y axe
     var xscale = plotwt/Math.ceil(xmax);
     var yscale = plotht/Math.ceil(ymax);
 
     //plot the datapoints
-    for (x = 0; x < dataHash[year].length; x++) {
-        splot.append('circle')
-            .attr('cx', (dataHash[year][x][attr1]) * xscale + margin.left)
-            .attr('cy', plotht + margin.top - (dataHash[year][x][attr2] * yscale))
-            .attr('r', '3')
-            .attr('fill', 'black')
-            .attr('id', dataHash[year][x]['Country'].toLowerCase().replaceAll(' ','-'))
-            .on("mouseover", function (event, d) {
-                console.log("mouseover");
-                div.transition()
-                    .duration(200)
-                    .style("opacity", .9);
-                div.html("country")
-                    .style("left", "30px")
-                    .style("top", "20px");
-            })
-            .on("mouseout", function (d) {
-                div.transition()
-                    .duration(500)
-                    .style("opacity", 0);
-            });
-        //should add tooltip on this
+    for (let x = 0; x < dataHash[year].length; x++) {
+        if (reg === "All") {
+            splot.append('circle')
+                .attr('cx', (dataHash[year][x][attr1]) * xscale + margin.left)
+                .attr('cy', plotht + margin.top - (dataHash[year][x][attr2] * yscale))
+                .attr('r', '3')
+                .attr('fill', color[0])
+                .attr('opacity', '0.5')
+                .attr('id', dataHash[year][x]['Country'].toLowerCase().replaceAll(' ', '-'))
+                .on("mouseover", function (event, d) {
+                    temp = d3version6.select(this).attr('id');
+                    updateOn(temp);
+                })
+                .on("mouseout", function (d) {
+                    temp = d3version6.select(this).attr('id');
+                    updateOff(temp);
+                });
+        }
+        else {
+            if (dataHash[year][x]['Region'] === reg) {
+                splot.append('circle')
+                    .attr('cx', (dataHash[year][x][attr1]) * xscale + margin.left)
+                    .attr('cy', plotht + margin.top - (dataHash[year][x][attr2] * yscale))
+                    .attr('r', '3')
+                    .attr('fill', color[0])
+                    .attr('opacity', '0.5')
+                    .attr('id', dataHash[year][x]['Country'].toLowerCase().replaceAll(' ', '-'))
+                    .on("mouseover", function (event, d) {
+                        temp = d3version6.select(this).attr('id');
+                        updateOn(temp);
+                    })
+                    .on("mouseout", function (d) {
+                        temp = d3version6.select(this).attr('id');
+                        updateOff(temp);
+                    });
+            }
+        }
     }
 
     //axes labels & title
@@ -151,25 +163,3 @@ const createScatterPlot = () => {
 allFilesPromise.then(() => {
     createScatterPlot();
 });
-
-document.getElementById("year").onchange = function () {
-    //console.log("year update");
-    d3version3.selectAll("#scatter-plot > *").remove(); 
-    allFilesPromise.then(() => {
-        createScatterPlot();
-    });
-}
-document.getElementById("attribute1").onchange = function () {
-    //console.log("attr1 update");
-    d3version3.selectAll("#scatter-plot > *").remove(); 
-    allFilesPromise.then(() => {
-        createScatterPlot();
-    });
-}
-document.getElementById("attribute2").onchange = function () {
-    //console.log("attr2 update");
-    d3version3.selectAll("#scatter-plot > *").remove(); 
-    allFilesPromise.then(() => {
-        createScatterPlot();
-    });
-}
