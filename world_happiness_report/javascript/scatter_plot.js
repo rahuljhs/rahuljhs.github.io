@@ -1,27 +1,26 @@
-const scatterPlotHeight = 400;
-const scatterPlotWidth = 400;
-const color = ['#d73027', '#fc8d59', '#fee090', '#e0f3f8', '#91bfdb', '#4575b4'];
+const scatterPlotHeight = 500;
+const scatterPlotWidth = 600;
+const color = ['#7f3b08', '#b35806', '#e08214', '#fdb863', '#fee0b6', '#d8daeb', '#b2abd2', '#8073ac', '#542788', '#2d004b'];
 
-var margin = { top: 40, bottom: 40, left: 50, right: 20 };
+var margin = { top: 50, bottom: 40, left: 70, right: 20 };
 
 var plotht = scatterPlotHeight - margin.top - margin.bottom;
 var plotwt = scatterPlotWidth - margin.left - margin.right;
 
-    const splot = d3version6.select('#scatter-plot');
+const splot = d3version6.select('#scatter-plot');
 
 const opacityOn = 1;
-const opacityOff = .5;
+const opacityOff = .6;
 
 
 // The color is just there to make sure code is working.  Feel Free to delete when working in this file!
 const createScatterPlot = () => {
-    var year = document.getElementById("year").value; //this will need to be updated by the filter input: Year
-    var attr1 = document.getElementById("attribute1").value; //this will need to be updated by the filter input: Attribute 1
-    var attr2 = document.getElementById("attribute2").value; //this will need to be updated by the filter input: Attribute 2
-    var reg = document.getElementById("region").value; 
+    let year = document.getElementById("year").value; //this will need to be updated by the filter input: Year
+    let attr1 = document.getElementById("attribute1").value; //this will need to be updated by the filter input: Attribute 1
+    let attr2 = document.getElementById("attribute2").value; //this will need to be updated by the filter input: Attribute 2
+    let reg = document.getElementById("region").value;
 
-    d3version6.select('#scatter-plot')
-        .style('width', `${scatterPlotWidth}px`)
+    splot.style('width', `${scatterPlotWidth}px`)
         .style('height', `${scatterPlotHeight}px`)
         .style('background-color', 'white')
         .append('g');
@@ -75,9 +74,10 @@ const createScatterPlot = () => {
             splot.append('circle')
                 .attr('cx', (dataHash[year][x][attr1]) * xscale + margin.left)
                 .attr('cy', plotht + margin.top - (dataHash[year][x][attr2] * yscale))
-                .attr('r', '3')
-                .attr('fill', color[0])
+                .attr('r', '4')
+                .attr('fill', color[2])
                 .attr('opacity', '0.5')
+                .attr('class', 'selected')
                 .attr('id', dataHash[year][x]['Country'].toLowerCase().replaceAll(' ', '-'))
                 .on("mouseover", function (event, d) {
                     temp = d3version6.select(this).attr('id');
@@ -90,19 +90,58 @@ const createScatterPlot = () => {
         }
         else {
             if (dataHash[year][x]['Region'] === reg) {
+                if (selectedCountryHash[dataHash[year][x]['Country'].toLowerCase().replaceAll(' ', '-')]) {
+                    splot.append('circle')
+                        .attr('cx', (dataHash[year][x][attr1]) * xscale + margin.left)
+                        .attr('cy', plotht + margin.top - (dataHash[year][x][attr2] * yscale))
+                        .attr('r', '4')
+                        .attr('fill', color[2])
+                        .attr('opacity', '0.5')
+                        .attr('class', 'selected')
+                        .attr('id', dataHash[year][x]['Country'].toLowerCase().replaceAll(' ', '-'))
+                        .on("mouseover", function (event, d) {
+                            let temp = d3version6.select(this).attr('id');
+                            updateOn(temp);
+                        })
+                        .on("mouseout", function (d) {
+                            let temp = d3version6.select(this).attr('id');
+                            updateOff(temp);
+                        });
+                }
+                else {
+                    splot.append('circle')
+                        .attr('cx', (dataHash[year][x][attr1]) * xscale + margin.left)
+                        .attr('cy', plotht + margin.top - (dataHash[year][x][attr2] * yscale))
+                        .attr('r', '4')
+                        .attr('fill', "#cccccc")
+                        .attr('opacity', '0.5')
+                        .attr('class', 'selected')
+                        .attr('id', dataHash[year][x]['Country'].toLowerCase().replaceAll(' ', '-'))
+                        .on("mouseover", function (event, d) {
+                            let temp = d3version6.select(this).attr('id');
+                            updateOn(temp);
+                        })
+                        .on("mouseout", function (d) {
+                            let temp = d3version6.select(this).attr('id');
+                            updateOff(temp);
+                        });
+                }
+            }
+            else {
                 splot.append('circle')
                     .attr('cx', (dataHash[year][x][attr1]) * xscale + margin.left)
                     .attr('cy', plotht + margin.top - (dataHash[year][x][attr2] * yscale))
-                    .attr('r', '3')
-                    .attr('fill', color[0])
+                    .attr('r', '4')
+                    .attr('fill', "#cccccc")
                     .attr('opacity', '0.5')
+                    .attr('class', 'selected')
                     .attr('id', dataHash[year][x]['Country'].toLowerCase().replaceAll(' ', '-'))
                     .on("mouseover", function (event, d) {
-                        temp = d3version6.select(this).attr('id');
+                        let temp = d3version6.select(this).attr('id');
                         updateOn(temp);
                     })
                     .on("mouseout", function (d) {
-                        temp = d3version6.select(this).attr('id');
+                        let temp = d3version6.select(this).attr('id');
                         updateOff(temp);
                     });
             }
@@ -155,9 +194,6 @@ const createScatterPlot = () => {
         .attr('class', 'axis')
         .attr('transform', 'translate(' + (margin.left) + ",0)")
         .call(yAxis);
-
-    //console.log("Axis: " + d3version3.select(".axis path").style("stroke-width"))
-
 }
 
 allFilesPromise.then(() => {

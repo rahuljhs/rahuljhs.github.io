@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <link rel="stylesheet" href="../styles.css">
+    <style>
+
+    </style>
 </head>
 <body>
 <ul class="navbar">
@@ -19,6 +22,49 @@
 <p style="margin-top: 0;">H517 Visualization Design, Analysis, & Evaluation</p>
 <h3 style="margin-top: 0; margin-bottom: 5px;">Data description: </h3>
 
+<div class="text-container">
+    <p>
+        The dataset chosen for our project is the world happiness report spanning the years 2015-2019.
+        The world happiness report presents scores and rankings acquired from Gallup World Poll by asking
+        “respondents to think of a ladder with the best possible life for them being a 10 and the worst possible life
+        being a 0 and to rate their own current lives on that scale” (quoted pulled from the linked kaggle dataset description).
+        The dataset also includes other interesting attributes that may contribute to happiness such as:
+    </p>
+    <ul>
+        <li>Economy (GPD per capita)</li>
+        <li>Family</li>
+        <li>Freedom</li>
+        <li>Dystopian Residual</li>
+        <li>And more</li>
+    </ul>
+    <h3 style="margin-top: 0; margin-bottom: 5px;">Data Manipulation: </h3>
+    <p>
+        Since the data we were using was distributed across 5 different files, representing the years 2015-2019,
+        the data needed to be curated to make sure things such as regions, countries, and variables all matched names
+        and casing.  Most of the changes to the csv files were done manually using find and replace features in an IDE.
+    </p>
+    <p>
+        The world map visualization, brought a whole new challenge to normalizing the data.  Considering that the world
+        map data was found from a completely different data source and that it had to be translated using an online
+        geojson translation tool, the country and region names did not match.  Actually, the regions were not event present.
+        To mitigate this issue, we wrote a python script to map the names of the countries to those in one of the
+        csv files.  After doing that we wrote another function in the same python script to add the regions from one of the csv
+        files to the geojson properties of the country objects.  In doing so, the country names, ids, and regions were all
+        present and usable when drawing the world map in our visualization.
+    </p>
+    <h3 style="margin-top: 10px; margin-bottom: 5px;">Data Sources: </h3>
+    <ul>
+        <li>
+            <a href="https://www.kaggle.com/unsdsn/world-happiness">World Happiness Data</a>
+        </li>
+        <li>
+            <a href="https://raw.githubusercontent.com/janasayantan/datageojson/master/world.json">Original World Map Data (Before Conversion)</a>
+        </li>
+        <li>
+            <a href="https://mygeodata.cloud">Online Geojson Conversion Tool</a>
+        </li>
+    </ul>
 
+</div>
 </body>
 </html>
