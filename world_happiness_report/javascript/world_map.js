@@ -8,11 +8,11 @@ const enabledCountryColor = 'white';
 const heatmap_colors = ['#7f3b08','#b35806','#e08214','#fdb863','#fee0b6','#d8daeb','#b2abd2','#8073ac','#542788','#2d004b'];
 
 const get_range = (year, attr1) => {
-    var min_attr = 0;
-    var max_attr = 0;
+    let min_attr = 0;
+    let max_attr = 0;
     for (let x = 0; x < dataHash[year].length; x++) {
         let attribute_value = Number(dataHash[year][x][attr1]);
-        if (x == 0){
+        if (x === 0){
             min_attr = attribute_value;
             max_attr = attribute_value;
         }
@@ -75,16 +75,6 @@ const update_heatmap = () => {
         }
 }
 
-const get_attr1_for_country = (country_name_from_data, year, attr1) =>{
-    for (let x = 0; x < dataHash[year].length; x++) {
-        let attribute_value = Number(dataHash[year][x][attr1]);
-        let country_name = dataHash[year][x]['Country'].toLowerCase().replaceAll(' ', '-')
-        if (country_name == country_name_from_data) {
-            return attribute_value;
-        }
-    }
-}
-
 const determine_country_color = (data, color='white') => {
     if (data['properties']['no_data'] === true) {
         color = noDataCountryColor;
@@ -112,9 +102,6 @@ const createWorldMap = (mapData) => {
         .rotate([0, 0])
         .center([0, 0])
         .translate([worldMapWidth / 2, worldMapHeight / 2]);
-        // TODO: remove, this was for the other data drawing file
-        // .fitSize([worldMapWidth, worldMapHeight], mapData)
-        // .precision(100);
     const pathGenerator = d3version6.geoPath().projection(projection);
 
     function handleZoom(event) {
@@ -219,21 +206,28 @@ const filterCountryRegion = (newRegion) => {
         .style('stroke', d => {
             let target = d3version6.select(`#world-map .${d['properties']['name'].toLowerCase().replaceAll(' ', '-')}`)
             if (target.classed('selected')) {
-                return 'yellow';
+                return 'black';
             }
-            return 'black';
+            return 'lightgrey';
         })
         .style('stroke-width', d => {
             let target = d3version6.select(`#world-map .${d['properties']['name'].toLowerCase().replaceAll(' ', '-')}`)
             if (target.classed('selected')) {
-                return '1.5';
+                return '0.8';
             }
             return '0.3';
+        })
+        Object.entries(selectedCountryHash).forEach((keyValArr) => selectedCountryHash[keyValArr[0]] = false);
+        d3version6.selectAll('#world-map .selected').each(d => {
+            let countryName = d['properties']['name'].toLowerCase().replaceAll(' ', '-');
+            selectedCountryHash[countryName] = true;
         })
 };
 
 worldMapPromise.then(data => {
-    createWorldMap(data);
-    update_heatmap();
+    allFilesPromise.then(() => {
+        createWorldMap(data);
+        update_heatmap();
+    })
 });
 

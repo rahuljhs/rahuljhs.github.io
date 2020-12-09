@@ -5,14 +5,12 @@ const legColors = ['#7f3b08', '#b35806', '#e08214', '#fdb863', '#fee0b6', '#d8da
 const legLabels = ['<10%', '10-20%', '20-30%', '30-40%', '40-50%', '50-60%', '60-70%', '70-80%', '80-90%', '90-100%']
 const cirRad = 15;
 
-const legHeight = 120;
+const legHeight = 160 ;
 const legWidth = 600;
 
 legend.style("background-color", "white").attr('height', legHeight).attr('width', legWidth);
 
 let legPad = (legWidth - legMargin.right - legMargin.left - legColors.length * (2 * cirRad))/ (legColors.length -1 );
-
-console.log(legend.attr('height'));
 
 for (let x = 0; x < legColors.length; x++) {
     legend.append('circle')
@@ -21,7 +19,6 @@ for (let x = 0; x < legColors.length; x++) {
         .attr('r', cirRad)
         .attr('fill', legColors[x])
         .attr('opacity', '1');
-    console.log('legend cirlce: ' + x);
 }
 
 
@@ -43,6 +40,25 @@ legend.append('g')
     .attr("dy", ".15em")
     .attr("transform", "rotate(-45)");
 
+
+//legend title
+
+attr1 = document.getElementById("attribute1").value;
+year = document.getElementById("year").value;
+
+legend.append('text')
+    .text("Percentile of " + attr1 + " in " + year)
+    .attr('id', 'title')
+    .attr('x', legWidth/2)
+    .attr('y', legHeight - 20)
+    .style('font-size', "16px")
+    .style('text-anchor', 'middle');
+
+const titleUpdate = () => {
+    attr1 = document.getElementById("attribute1").value;
+    year = document.getElementById("year").value;
+    legend.selectAll('#title').text("Percentile of " + attr1 + " in " + year);
+}
 
 //legend.append('circle')
 //    .attr('cx', 300)
